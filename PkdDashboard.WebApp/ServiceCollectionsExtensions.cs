@@ -3,6 +3,7 @@
 using PkdDashboard.Global;
 using PkdDashboard.Shared.Migrations;
 using PkdDashboard.WebApp.Data;
+using PkdDashboard.WebApp.Data.Abstract;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
@@ -12,28 +13,31 @@ public static class ServiceCollectionsExtensions
 
     internal static void AddWebappDataServices(this IHostApplicationBuilder builder)
     {
-        builder.AddDatabase();
+        builder.AddDatabase<AuthDbContext>();
+        builder.AddDatabase<AppDbContext>();
     }
 
-    public static void AddAuthMigrator(this IHostApplicationBuilder builder)
+    public static void AddWebAppMigrators(this IHostApplicationBuilder builder)
     {
-        builder.AddDatabase();
+        builder.AddDatabase<AuthDbContext>();
+        builder.AddDatabase<AppDbContext>();
 
         builder.Services.AddTransient<IMigrator, AuthMigrator>();
+        builder.Services.AddTransient<IMigrator, AppMigrator>();
     }
 
-    private static void AddDatabase(this IHostApplicationBuilder builder)
+    private static void AddDatabase<T>(this IHostApplicationBuilder builder) where T : DbContext, IDbContextWithMigrationTable
     {
-        string connectionString = builder.Configuration.GetConnectionString(ServiceKeys.AuthDatabase)
-            ?? throw new ArgumentNullException($"No connection string provided for {ServiceKeys.AuthDatabase}");
+        string connectionString = builder.Configuration.GetConnectionString(ServiceKeys.Database)
+            ?? throw new ArgumentNullException($"No connection string provided for '{ServiceKeys.Database}'");
 
-        builder.Services.AddDbContext<AuthDbContext>(options =>
-        options.UseNpgsql(connectionString, options =>
-        {
-            options.MigrationsHistoryTable(AuthDbContext.MigrationsTable, MigrationsSchema);
-        }));
+        builder.Services.AddDbContext<T>(options =>
+            options.UseNpgsql(connectionString, options =>
+            {
+                options.MigrationsHistoryTable(T.MigrationsTable, MigrationsSchema);
+            }));
 
-        builder.EnrichNpgsqlDbContext<AuthDbContext>(options =>
+        builder.EnrichNpgsqlDbContext<T>(options =>
         {
             options.CommandTimeout = 15;
         });

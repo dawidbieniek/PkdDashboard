@@ -6,7 +6,7 @@ var postgre = builder.AddPostgres(ServiceKeys.PostgreSql)
     .WithPgAdmin()
     .WithDataVolume()
     .WithLifetime(ContainerLifetime.Persistent);
-var authDb = postgre.AddDatabase(ServiceKeys.AuthDatabase);
+var authDb = postgre.AddDatabase(ServiceKeys.Database);
 
 var migrator = builder.AddProject<Projects.PkdDashboard_Migrator>(ServiceKeys.Migrator)
     .WithReference(authDb).WaitFor(authDb);

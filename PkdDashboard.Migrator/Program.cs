@@ -3,7 +3,7 @@ using PkdDashboard.Migrator;
 var builder = Host.CreateApplicationBuilder(args);
 
 builder.AddServiceDefaults();
-builder.AddAuthMigrator();
+builder.AddWebAppMigrators();
 
 builder.Services.AddHostedService<Worker>();
 

@@ -10,31 +10,32 @@ public static class ServiceCollectionsExtensions
 {
     private const string MigrationsSchema = "schMigrations";
 
-    internal static IServiceCollection AddWebappDataServices(this IServiceCollection services)
+    internal static void AddWebappDataServices(this IHostApplicationBuilder builder)
     {
-        services.AddDatabase(ServiceKeys.AuthDatabase);
-
-        return services;
+        builder.AddDatabase();
     }
 
     public static void AddAuthMigrator(this IHostApplicationBuilder builder)
     {
+        builder.AddDatabase();
+
+        builder.Services.AddTransient<IMigrator, AuthMigrator>();
+    }
+
+    private static void AddDatabase(this IHostApplicationBuilder builder)
+    {
         string connectionString = builder.Configuration.GetConnectionString(ServiceKeys.AuthDatabase)
             ?? throw new ArgumentNullException($"No connection string provided for {ServiceKeys.AuthDatabase}");
 
-        IServiceCollection services = builder.Services;
-        services.AddDatabase(connectionString);
-
-        services.AddTransient<IMigrator, AuthMigrator>();
-    }
-
-    private static IServiceCollection AddDatabase(this IServiceCollection services, string connectionString)
-    {
-        services.AddNpgsql<AuthDbContext>(connectionString, options =>
+        builder.Services.AddDbContext<AuthDbContext>(options =>
+        options.UseNpgsql(connectionString, options =>
         {
             options.MigrationsHistoryTable(AuthDbContext.MigrationsTable, MigrationsSchema);
-        });
+        }));
 
-        return services;
+        builder.EnrichNpgsqlDbContext<AuthDbContext>(options =>
+        {
+            options.CommandTimeout = 15;
+        });
     }
 }

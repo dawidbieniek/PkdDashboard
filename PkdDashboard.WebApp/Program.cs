@@ -9,6 +9,7 @@ using PkdDashboard.WebApp.Data.Entities.Auth;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
+builder.AddWebappDataServices();
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
@@ -26,7 +27,6 @@ builder.Services.AddAuthentication(options =>
 })
     .AddIdentityCookies();
 
-builder.Services.AddWebappDataServices();
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)

@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\PkdDashboard.Global\PkdDashboard.Global.csproj" IsAspireProjectResource="false" />
+    <ProjectReference Include="..\PkdDashboard.Migrator\PkdDashboard.Migrator.csproj" />
     <ProjectReference Include="..\PkdDashboard.WebApp\PkdDashboard.WebApp.csproj" />
   </ItemGroup>
 

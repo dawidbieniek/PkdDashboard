@@ -1,14 +1,16 @@
 using System.Security.Claims;
 using System.Text.Json;
+
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Primitives;
+
 using PkdDashboard.WebApp.Components.Account.Pages;
 using PkdDashboard.WebApp.Components.Account.Pages.Manage;
-using PkdDashboard.WebApp.Data;
+using PkdDashboard.WebApp.Data.Entities.Auth;
 
 namespace Microsoft.AspNetCore.Routing;
 

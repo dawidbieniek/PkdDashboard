@@ -1,9 +1,11 @@
 using System.Security.Claims;
+
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Server;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
-using PkdDashboard.WebApp.Data;
+
+using PkdDashboard.WebApp.Data.Entities.Auth;
 
 namespace PkdDashboard.WebApp.Components.Account;
 

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
-using PkdDashboard.WebApp.Data;
+
+using PkdDashboard.WebApp.Data.Entities.Auth;
 
 namespace PkdDashboard.WebApp.Components.Account;
 

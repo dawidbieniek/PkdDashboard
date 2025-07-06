@@ -6,13 +6,18 @@ var postgre = builder.AddPostgres(ServiceKeys.PostgreSql)
     .WithPgAdmin()
     .WithDataVolume()
     .WithLifetime(ContainerLifetime.Persistent);
-var authDb = postgre.AddDatabase(ServiceKeys.Database);
+var database = postgre.AddDatabase(ServiceKeys.Database);
 
 var migrator = builder.AddProject<Projects.PkdDashboard_Migrator>(ServiceKeys.Migrator)
-    .WithReference(authDb).WaitFor(authDb);
+    .WithReference(database).WaitFor(database);
+
+var dataPolling = builder.AddProject<Projects.PkdDashboard_DataPollingService>(ServiceKeys.DataPollingService)
+    .WithReference(database).WaitFor(database)
+    .WaitForCompletion(migrator);
 
 builder.AddProject<Projects.PkdDashboard_WebApp>(ServiceKeys.WebApp)
-    .WithReference(authDb).WaitFor(authDb)
+    .WithReference(database).WaitFor(database)
+    .WithReference(dataPolling).WaitFor(dataPolling)
     .WaitForCompletion(migrator);
 
 builder.Build().Run();

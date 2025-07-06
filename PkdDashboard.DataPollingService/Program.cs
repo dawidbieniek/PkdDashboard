@@ -1,0 +1,18 @@
+using Hangfire;
+
+using PkdDashboard.DataPollingService;
+
+var builder = WebApplication.CreateBuilder(args);
+
+builder.AddServiceDefaults();
+builder.AddPollingServiceDataServices();
+
+builder.ConfigureHangfire();
+builder.Services.AddHangfireServer();
+
+var app = builder.Build();
+app.MapJobEndpoints();
+app.MapDefaultEndpoints();
+app.UseHangfireDashboard();
+
+app.Run();

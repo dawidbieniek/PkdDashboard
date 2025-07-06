@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36221.1 d17.14
+VisualStudioVersion = 17.14.36221.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PkdDashboard.WebApp", "PkdDashboard.WebApp\PkdDashboard.WebApp.csproj", "{E096AED3-3BE5-3D93-DB0A-CB592B450534}"
 EndProject
@@ -14,6 +14,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PkdDashboard.Migrator", "PkdDashboard.Migrator\PkdDashboard.Migrator.csproj", "{5E101AD0-4687-6A2D-C056-83C7E957BE47}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PkdDashboard.Shared", "PkdDashboard.Shared\PkdDashboard.Shared.csproj", "{92C67ECD-36EE-4B45-8C6F-3E7059B42F57}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PkdDashboard.DataPollingService", "PkdDashboard.DataPollingService\PkdDashboard.DataPollingService.csproj", "{C9764382-8853-E3D5-B3D9-742695731E36}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -45,6 +47,10 @@ Global
 		{92C67ECD-36EE-4B45-8C6F-3E7059B42F57}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{92C67ECD-36EE-4B45-8C6F-3E7059B42F57}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{92C67ECD-36EE-4B45-8C6F-3E7059B42F57}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C9764382-8853-E3D5-B3D9-742695731E36}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C9764382-8853-E3D5-B3D9-742695731E36}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C9764382-8853-E3D5-B3D9-742695731E36}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C9764382-8853-E3D5-B3D9-742695731E36}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

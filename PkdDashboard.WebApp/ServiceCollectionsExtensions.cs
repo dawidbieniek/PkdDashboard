@@ -32,7 +32,7 @@ public static class ServiceCollectionsExtensions
     private static void AddDatabase<T>(this IHostApplicationBuilder builder) where T : DbContext, IDbContextWithMigrationTable
     {
         string connectionString = builder.Configuration.GetConnectionString(ServiceKeys.Database)
-            ?? throw new ArgumentNullException($"No connection string provided for '{ServiceKeys.Database}'");
+            ?? throw new NullReferenceException($"No connection string provided for '{ServiceKeys.Database}'");
 
         builder.Services.AddDbContext<T>((sp, options) =>
         {

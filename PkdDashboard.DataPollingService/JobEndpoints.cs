@@ -8,9 +8,9 @@ internal static class JobEndpoints
 {
     public static void MapJobEndpoints(this IEndpointRouteBuilder app)
     {
-        app.MapGet("/job", (IBackgroundJobClient bgw, IQueryCompanyCountsJob job) =>
+        app.MapGet("/job", (IBackgroundJobClient bgw, IQueryCompanyCountsJob job, CancellationToken cancellationToken) =>
         {
-            bgw.Enqueue(() => job.Execute());
+            bgw.Enqueue(() => job.ExecuteAsync(cancellationToken));
         });
     }
 }

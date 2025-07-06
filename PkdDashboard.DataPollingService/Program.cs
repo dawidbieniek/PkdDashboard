@@ -10,6 +10,8 @@ builder.AddPollingServiceDataServices();
 builder.ConfigureHangfire();
 builder.Services.AddHangfireServer();
 
+builder.AddHttpClients();
+
 var app = builder.Build();
 app.MapJobEndpoints();
 app.MapDefaultEndpoints();

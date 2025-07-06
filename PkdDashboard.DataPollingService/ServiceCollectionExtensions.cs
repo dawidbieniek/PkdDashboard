@@ -3,9 +3,13 @@ using Hangfire.PostgreSql;
 
 using Microsoft.EntityFrameworkCore;
 
+using PkdDashboard.DataPollingService;
 using PkdDashboard.DataPollingService.Data;
 using PkdDashboard.DataPollingService.Jobs;
+using PkdDashboard.DataPollingService.Jobs.QueryCompanyCounts;
 using PkdDashboard.Global;
+
+using System.Net.Http.Headers;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
@@ -32,12 +36,27 @@ internal static class ServiceCollectionExtensions
         builder.Services.AddJobs();
     }
 
+    public static void AddHttpClients(this IHostApplicationBuilder builder)
+    {
+        string token = builder.Configuration["BiznesGovKey"]
+            ?? throw new NullReferenceException("No JWT for authorization");
+
+        builder.Services.AddHttpClient(HttpClientKeys.BiznesGovKey, options =>
+        {
+            options.BaseAddress = new("https://dane.biznes.gov.pl/api/ceidg/v3/");
+            options.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        });
+    }
+
     private static IServiceCollection AddJobs(this IServiceCollection services)
     {
         services.AddScoped<IQueryCompanyCountsJob, QueryCompanyCountsJob>();
+        services.AddScoped<HttpService>();
+        services.AddScoped<DatabaseService>();
 
         return services;
     }
+
     private static void AddDatabase<T>(this IHostApplicationBuilder builder) where T : DbContext
     {
         string connectionString = builder.GetDbConnectionString();

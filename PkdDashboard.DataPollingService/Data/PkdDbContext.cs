@@ -14,6 +14,8 @@ internal class PkdDbContext(DbContextOptions<PkdDbContext> options) : DbContext(
     protected override void OnModelCreating(ModelBuilder builder)
     {
         builder.HasDefaultSchema(SchemaName);
+        builder.Entity<CompanyCount>()
+            .HasKey(cc => new { cc.PkdEntryId, cc.Day });
         base.OnModelCreating(builder);
     }
 }

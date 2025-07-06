@@ -2,5 +2,5 @@
 
 internal interface IQueryCompanyCountsJob
 {
-    void Execute();
+    Task ExecuteAsync(CancellationToken cancellationToken);
 }

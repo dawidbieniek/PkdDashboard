@@ -8,5 +8,5 @@ internal class PkdEntry
     public int Class { get; set; }
     public char PkdSuffix { get; set; }
 
-    public string ToQueryString => $"{Division:D2}{Group}{Class}{PkdSuffix}";
+    public string ToQueryString() => $"{Division:D2}{Group}{Class}{PkdSuffix}";
 }

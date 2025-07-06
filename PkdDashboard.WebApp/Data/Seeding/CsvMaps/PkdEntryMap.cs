@@ -28,7 +28,7 @@ internal class PkdEntryMap : ClassMap<PkdEntry>
                 var text = row.Row.GetField("Class");
                 return string.IsNullOrEmpty(text)
                     ? -1
-                    : int.Parse(text.Split('.')[1]);
+                    : int.Parse(text.Split('.')[1][1].ToString());
             });
 
         Map(m => m.PkdSuffix)

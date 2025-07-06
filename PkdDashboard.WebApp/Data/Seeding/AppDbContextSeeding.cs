@@ -15,10 +15,10 @@ internal class AppDbContextSeeding(ILogger<AppDbContextSeeding> logger) : ISeede
 {
     private readonly ILogger<AppDbContextSeeding> _logger = logger;
 
-    private readonly HashSet<string> _resourcesToConsider = new()
-    {
+    private readonly HashSet<string> _resourcesToConsider =
+    [
         "PkdDashboard.Migrator.Resources.Seeding.AppDbContext.PkdEntry.tsv"
-    };
+    ];
 
 
     public Func<DbContext, bool, CancellationToken, Task> SeedAsync() => async (context, _, cancellationToken) =>
@@ -63,12 +63,12 @@ internal class AppDbContextSeeding(ILogger<AppDbContextSeeding> logger) : ISeede
 
         var recordsInFile = csv.GetRecordsAsync<PkdEntry>(cancellationToken);
 
-        var recordsInDatabase = await context.PkdEntries.ToHashSetAsync(cancellationToken);
+        var recordsInDatabase = await context.PkdEntries.Select(x => x.PkdString).ToHashSetAsync(cancellationToken);
 
         List<PkdEntry> recordsToAdd = [];
         await foreach (var record in recordsInFile)
         {
-            if (!recordsInDatabase.Contains(record))
+            if (!recordsInDatabase.Contains(record.PkdString))
                 recordsToAdd.Add(record);
         }
 

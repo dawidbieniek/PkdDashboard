@@ -45,13 +45,18 @@ internal class Worker(IServiceProvider serviceProvider, IHostApplicationLifetime
 
         foreach (IMigrator migrator in migratorsCollection)
         {
+            string migratorName = migrator.GetType().Name;
+
             try
             {
+                _logger.Value.LogInformation("Processing {MigratorName}", migratorName);
+                await migrator.EnsureDbContextCreatedAsync(cancellationToken);
+
                 IEnumerable<string> pendingMigrations = await migrator.GetPendingMigrationsAsync(cancellationToken);
 
                 if (!pendingMigrations.Any())
                 {
-                    _logger.Value.LogInformation("No migrations to apply for {MigratorName}", migrator.GetType().Name);
+                    _logger.Value.LogInformation("No migrations to apply for {MigratorName}", migratorName);
                     continue;
                 }
 
@@ -63,7 +68,7 @@ internal class Worker(IServiceProvider serviceProvider, IHostApplicationLifetime
             catch (Exception ex)
             {
                 activity?.RecordException(ex);
-                _logger.Value.LogError(ex, "Migration failed for {MigratorName}", migrator.GetType().Name);
+                _logger.Value.LogError(ex, "Migration failed for {MigratorName}", migratorName);
                 exceptions.Add(ex);
             }
         }

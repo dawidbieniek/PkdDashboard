@@ -6,6 +6,15 @@ public abstract class MigratorBase<T>(T dbContext) : IMigrator where T : DbConte
 {
     protected T DbContext { get; private init; } = dbContext;
 
+    public async Task EnsureDbContextCreatedAsync(CancellationToken cancellationToken)
+    {
+        var strategy = DbContext.Database.CreateExecutionStrategy();
+        await strategy.ExecuteAsync(async () =>
+        {
+            await DbContext.Database.EnsureCreatedAsync(cancellationToken);
+        });
+    }
+
     public Task<IEnumerable<string>> GetPendingMigrationsAsync(CancellationToken cancellationToken) => DbContext.Database.GetPendingMigrationsAsync(cancellationToken);
 
     public async Task MigrateAsync(CancellationToken cancellationToken)
@@ -13,7 +22,6 @@ public abstract class MigratorBase<T>(T dbContext) : IMigrator where T : DbConte
         var strategy = DbContext.Database.CreateExecutionStrategy();
         await strategy.ExecuteAsync(async () =>
         {
-            // Run migration in a transaction to avoid partial migration if it fails.
             await DbContext.Database.MigrateAsync(cancellationToken);
         });
     }

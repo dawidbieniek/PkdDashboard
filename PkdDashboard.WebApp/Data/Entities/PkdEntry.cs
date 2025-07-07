@@ -11,7 +11,7 @@ internal class PkdEntry : Entity
 
     public string DivisionString => $"{Division:D2}";
     public string GroupString => $"{DivisionString}.{Group}";
-    public string ClassString => $"{GroupString}.{Class}";
+    public string ClassString => $"{GroupString}{Class}";
     public string PkdString => $"{ClassString}.{PkdSuffix}";
 
     public string ToQueryString => $"{Division:D2}{Group}{Class}{PkdSuffix}";

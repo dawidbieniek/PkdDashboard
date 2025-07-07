@@ -11,11 +11,12 @@ using PkdDashboard.WebApp.Data.Entities.Auth;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
-builder.AddWebappDataServices();
+builder.AddWebAppDataServices();
+builder.Services.AddWebAppServices();
 
 // Add services to the container.
-builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents();
+builder.Services.AddRazorComponents(opt => opt.DetailedErrors = true)
+    .AddInteractiveServerComponents(opt => opt.DetailedErrors = true);
 
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<IdentityUserAccessor>();

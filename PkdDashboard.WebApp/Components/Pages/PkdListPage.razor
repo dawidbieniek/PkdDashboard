@@ -1,5 +1,66 @@
-﻿<h3>PkdListPage</h3>
+﻿@page "/pkd"
+@using Microsoft.EntityFrameworkCore
+@using PkdDashboard.WebApp.Components.Layout
+
+@layout MainLayout
+@rendermode InteractiveServer
+@attribute [Authorize]
+
+@inject PkdService PkdService
+
+<PageTitle>Lista PKD</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge">
+    <MudTable @ref="_table" ServerData="ServerReload" Height="75vh" Hover>
+        <ColGroup>
+            <col style="width: 60px" />
+            <col style="width: 60px" />
+            <col style="width: 60px" />
+            <col style="width: 60px" />
+            <col style="width: 60px" />
+            <col />
+        </ColGroup>
+        <HeaderContent>
+            <MudTh>Sekcja</MudTh>
+            <MudTh>Dział</MudTh>
+            <MudTh>Grupa</MudTh>
+            <MudTh>Klasa</MudTh>
+            <MudTh>Symbol</MudTh>
+            <MudTh>Opis</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Section">@context.Section</MudTd>
+            <MudTd DataLabel="Division">@context.DivisionString</MudTd>
+            <MudTd DataLabel="Group">@context.GroupString</MudTd>
+            <MudTd DataLabel="Class">@context.ClassString</MudTd>
+            <MudTd DataLabel="Symbol">@context.PkdString</MudTd>
+            <MudTd DataLabel="Description">@context.Description</MudTd>
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager HideRowsPerPage InfoFormat="{first_item}-{last_item} z {all_items}" />
+        </PagerContent>
+    </MudTable>
+</MudContainer>
 
 @code {
+    private MudTable<PkdEntry> _table = default!;
 
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if(firstRender)
+            await _table.ReloadServerData();
+    }
+
+    private async Task<TableData<PkdEntry>> ServerReload(TableState state, CancellationToken token)
+    {
+        var query = PkdService.GetListQuery().OrderBy(x=>x.Division).ThenBy(x=>x.Group).ThenBy(x=>x.Class);
+
+        var total = await query.CountAsync();
+        var data = await query
+            .Skip(state.Page * state.PageSize)
+            .Take(state.PageSize)
+            .ToListAsync();
+        // Return the data
+        return new TableData<PkdEntry>() { TotalItems = total, Items = data };
+    }
 }

@@ -1,8 +1,7 @@
 ﻿@inherits LayoutComponentBase
 
-<MudThemeProvider IsDarkMode="true" />
-<MudPopoverProvider />
-
+<AppThemeProvider @rendermode="InteractiveServer" />
+<MudPopoverProvider @rendermode="InteractiveServer" />
 
 <MudLayout>
     <MudAppBar>
@@ -11,13 +10,14 @@
     <MudDrawer Open="true">
         <NavMenu />
     </MudDrawer>
-    <MudMainContent>
+    <MudMainContent Class="p-4" Style="margin-top:var(--mud-appbar-height);">
         @Body
     </MudMainContent>
 </MudLayout>
 
-<div id="blazor-error-ui" data-nosnippet>
-    An unhandled error has occurred.
-    <a href="." class="reload">Reload</a>
-    <span class="dismiss">🗙</span>
-</div>
+<MudAlert Severity="Severity.Error" CloseIcon="@Icons.Material.Filled.Close" id="blazor-error-ui" data-nosnippet>
+    <MudStack Row>
+        <MudText Typo="Typo.h6">An unhandled error has occurred.</MudText>
+        <MudLink Href="." Class="reload">Reload</MudLink>
+    </MudStack>
+</MudAlert>

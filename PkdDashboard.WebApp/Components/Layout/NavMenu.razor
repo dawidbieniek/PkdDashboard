@@ -1,73 +1,53 @@
 ﻿@implements IDisposable
 
 @inject NavigationManager NavigationManager
+<MudNavMenu>
 
-<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">PkdDashboard.WebApp</a>
-    </div>
-</div>
+    <!-- Top brand label (you can adapt styling or use a separate Mud component above) -->
+    <MudNavLink Href="/" Match="NavLinkMatch.All">
+        <MudText Typo="Typo.h6" Align="Align.Center">PkdDashboard</MudText>
+        <MudDivider DividerType="DividerType.FullWidth" Style="border-width:3px"/>
+    </MudNavLink>
 
-<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
+    <!-- Navigation links -->
+    <MudNavLink Href="" Match="NavLinkMatch.All">
+        <MudIcon Icon="@Icons.Material.Filled.House" /> Home
+    </MudNavLink>
 
-<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
-    <nav class="nav flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
-            </NavLink>
-        </div>
+    <MudNavLink Href="counter">
+        <MudIcon Icon="@Icons.Material.Filled.PlusOne" /> Counter
+    </MudNavLink>
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="counter">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Counter
-            </NavLink>
-        </div>
+    <MudNavLink Href="weather">
+        <MudIcon Icon="@Icons.Material.Filled.Cloud" /> Weather
+    </MudNavLink>
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="weather">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
-            </NavLink>
-        </div>
+    <MudNavLink Href="auth">
+        <MudIcon Icon="@Icons.Material.Filled.Lock" /> Auth Required
+    </MudNavLink>
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="auth">
-                <span class="bi bi-lock-nav-menu" aria-hidden="true"></span> Auth Required
-            </NavLink>
-        </div>
-
-        <AuthorizeView>
-            <Authorized>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="Account/Manage">
-                        <span class="bi bi-person-fill-nav-menu" aria-hidden="true"></span> @context.User.Identity?.Name
-                    </NavLink>
-                </div>
-                <div class="nav-item px-3">
-                    <form action="Account/Logout" method="post">
-                        <AntiforgeryToken />
-                        <input type="hidden" name="ReturnUrl" value="@currentUrl" />
-                        <button type="submit" class="nav-link">
-                            <span class="bi bi-arrow-bar-left-nav-menu" aria-hidden="true"></span> Logout
-                        </button>
-                    </form>
-                </div>
-            </Authorized>
-            <NotAuthorized>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="Account/Register">
-                        <span class="bi bi-person-nav-menu" aria-hidden="true"></span> Register
-                    </NavLink>
-                </div>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="Account/Login">
-                        <span class="bi bi-person-badge-nav-menu" aria-hidden="true"></span> Login
-                    </NavLink>
-                </div>
-            </NotAuthorized>
-        </AuthorizeView>
-    </nav>
-</div>
+    <!-- Authorization-based links -->
+    <AuthorizeView>
+        <Authorized>
+            <MudNavGroup Title="@context.User.Identity?.Name">
+                <MudNavLink Href="Account/Manage">
+                    <MudIcon Icon="@Icons.Material.Filled.Face" /> Profile
+                </MudNavLink>
+                <MudNavLink OnClick="Logout">
+                    <MudIcon Icon="@Icons.Material.Filled.ArrowLeft" /> Logout
+                </MudNavLink>
+            </MudNavGroup>
+        </Authorized>
+        <NotAuthorized>
+            <MudNavLink Href="Account/Register">
+                <MudIcon Icon="@Icons.Material.Filled.Create" /> Register
+            </MudNavLink>
+            <MudNavLink Href="Account/Login">
+                <MudIcon Icon="@Icons.Material.Filled.Badge" /> Login
+            </MudNavLink>
+        </NotAuthorized>
+    </AuthorizeView>
+</MudNavMenu>
 
 @code {
     private string? currentUrl;
@@ -75,18 +55,23 @@
     protected override void OnInitialized()
     {
         currentUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
-        NavigationManager.LocationChanged += OnLocationChanged;
+        NavigationManager.LocationChanged += LocationChangedHandler;
     }
 
-    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    private void LocationChangedHandler(object? sender, LocationChangedEventArgs e)
     {
         currentUrl = NavigationManager.ToBaseRelativePath(e.Location);
         StateHasChanged();
     }
 
+    private Task Logout()
+    {
+        NavigationManager.NavigateTo($"Account/Logout?returnUrl={Uri.EscapeDataString(currentUrl!)}", forceLoad: true);
+        return Task.CompletedTask;
+    }
+
     public void Dispose()
     {
-        NavigationManager.LocationChanged -= OnLocationChanged;
+        NavigationManager.LocationChanged -= LocationChangedHandler;
     }
 }
-

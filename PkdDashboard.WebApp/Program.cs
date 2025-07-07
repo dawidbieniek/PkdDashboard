@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 
+using MudBlazor.Services;
+
 using PkdDashboard.WebApp.Components;
 using PkdDashboard.WebApp.Components.Account;
 using PkdDashboard.WebApp.Data;
@@ -35,6 +37,8 @@ builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.Requ
     .AddDefaultTokenProviders();
 
 builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
+
+builder.Services.AddMudServices();
 
 var app = builder.Build();
 

@@ -22,8 +22,4 @@
     <ProjectReference Include="..\PkdDashboard.Shared\PkdDashboard.Shared.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Data\Migrations\App\" />
-  </ItemGroup>
-
 </Project>

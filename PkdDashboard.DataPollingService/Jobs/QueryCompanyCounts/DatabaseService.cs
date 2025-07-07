@@ -7,7 +7,7 @@ internal class DatabaseService(PkdDbContext dbContext)
 {
     private readonly PkdDbContext _dbContext = dbContext;
 
-    public bool IsTodayEntryPresent(DateTime today)
+    public bool IsTodayEntryPresent(DateOnly today)
         => _dbContext.CompanyCounts
             .Any(x => x.Day == today);
 
@@ -17,7 +17,7 @@ internal class DatabaseService(PkdDbContext dbContext)
             .Where(x => x.Id <= 5)  // HACK: For testing
             .ToList();
 
-    public Task SaveCompanyCountAsync(DateTime day, PkdEntry pkd, int count, CancellationToken cancellationToken)
+    public Task SaveCompanyCountAsync(DateOnly day, PkdEntry pkd, int count, CancellationToken cancellationToken)
     {
         var existingRecord = _dbContext.CompanyCounts
             .FirstOrDefault(x => x.Day == day && x.PkdEntryId == pkd.Id);

@@ -8,7 +8,7 @@ internal class QueryCompanyCountsJob(ILogger<QueryCompanyCountsJob> logger, Data
 
     public async Task ExecuteAsync(CancellationToken cancellationToken)
     {
-        DateTime today = DateTime.UtcNow.AddHours(2).Date; // We want local time in Poland (UTC+2)
+        DateOnly today = DateOnly.FromDateTime(DateTime.UtcNow.AddHours(2)); // We want local time in Poland (UTC+2)
         _logger.LogInformation("Starting company count query for {date}", today);
 
         if (_databaseService.IsTodayEntryPresent(today))

@@ -4,6 +4,6 @@ internal class CompanyCount
 {
     public int PkdEntryId { get; set; }
     public virtual PkdEntry PkdEntry { get; set; } = default!;
-    public DateTime Day { get; set; }
+    public DateOnly Day { get; set; }
     public int Count { get; set; }
 }

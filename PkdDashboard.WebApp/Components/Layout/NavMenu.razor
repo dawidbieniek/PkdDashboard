@@ -1,77 +1,12 @@
-﻿@implements IDisposable
-
-@inject NavigationManager NavigationManager
-<MudNavMenu>
-
-    <!-- Top brand label (you can adapt styling or use a separate Mud component above) -->
+﻿<MudNavMenu>
     <MudNavLink Href="/" Match="NavLinkMatch.All">
         <MudText Typo="Typo.h6" Align="Align.Center">PkdDashboard</MudText>
         <MudDivider DividerType="DividerType.FullWidth" Style="border-width:3px"/>
     </MudNavLink>
-
-    <!-- Navigation links -->
     <MudNavLink Href="" Match="NavLinkMatch.All">
-        <MudIcon Icon="@Icons.Material.Filled.House" /> Home
+        <MudIcon Icon="@Icons.Material.Outlined.Analytics" /> Dashboard
     </MudNavLink>
-
-    <MudNavLink Href="counter">
-        <MudIcon Icon="@Icons.Material.Filled.PlusOne" /> Counter
+    <MudNavLink Href="pkd">
+        <MudIcon Icon="@Icons.Material.Filled.FormatListBulleted" /> Lista PKD
     </MudNavLink>
-
-    <MudNavLink Href="weather">
-        <MudIcon Icon="@Icons.Material.Filled.Cloud" /> Weather
-    </MudNavLink>
-
-    <MudNavLink Href="auth">
-        <MudIcon Icon="@Icons.Material.Filled.Lock" /> Auth Required
-    </MudNavLink>
-
-    <!-- Authorization-based links -->
-    <AuthorizeView>
-        <Authorized>
-            <MudNavGroup Title="@context.User.Identity?.Name">
-                <MudNavLink Href="Account/Manage">
-                    <MudIcon Icon="@Icons.Material.Filled.Face" /> Profile
-                </MudNavLink>
-                <MudNavLink OnClick="Logout">
-                    <MudIcon Icon="@Icons.Material.Filled.ArrowLeft" /> Logout
-                </MudNavLink>
-            </MudNavGroup>
-        </Authorized>
-        <NotAuthorized>
-            <MudNavLink Href="Account/Register">
-                <MudIcon Icon="@Icons.Material.Filled.Create" /> Register
-            </MudNavLink>
-            <MudNavLink Href="Account/Login">
-                <MudIcon Icon="@Icons.Material.Filled.Badge" /> Login
-            </MudNavLink>
-        </NotAuthorized>
-    </AuthorizeView>
 </MudNavMenu>
-
-@code {
-    private string? currentUrl;
-
-    protected override void OnInitialized()
-    {
-        currentUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
-        NavigationManager.LocationChanged += LocationChangedHandler;
-    }
-
-    private void LocationChangedHandler(object? sender, LocationChangedEventArgs e)
-    {
-        currentUrl = NavigationManager.ToBaseRelativePath(e.Location);
-        StateHasChanged();
-    }
-
-    private Task Logout()
-    {
-        NavigationManager.NavigateTo($"Account/Logout?returnUrl={Uri.EscapeDataString(currentUrl!)}", forceLoad: true);
-        return Task.CompletedTask;
-    }
-
-    public void Dispose()
-    {
-        NavigationManager.LocationChanged -= LocationChangedHandler;
-    }
-}

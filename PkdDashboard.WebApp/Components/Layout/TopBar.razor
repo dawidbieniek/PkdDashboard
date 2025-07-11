@@ -1,0 +1,43 @@
+@using PkdDashboard.WebApp.Components.Account
+@implements IDisposable
+
+@inject NavigationManager Navigation
+
+<MudStack Row Class="w-100">
+    <MudSpacer/>
+    <AuthorizeView>
+        <Authorized>
+            <MudText Typo="Typo.body1" Class="my-auto">@context.User.Identity?.Name!</MudText>
+            <form method="post" action="Account/Logout">
+                <AntiforgeryToken />
+                <input type="hidden" name="ReturnUrl" value="@_currentUrl" />
+                <MudButton Variant="Variant.Filled" Color="Color.Error" ButtonType="ButtonType.Submit" StartIcon="@Icons.Material.Filled.Logout">Logout</MudButton>
+            </form>
+        </Authorized>
+        <NotAuthorized>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="@($"/Account/Login?ReturnUrl={_currentUrl}")" StartIcon="@Icons.Material.Filled.Login">Login</MudButton>
+        </NotAuthorized>
+    </AuthorizeView>
+</MudStack>
+
+
+@code {
+    private string? _currentUrl;
+
+    protected override void OnInitialized()
+    {
+        _currentUrl = Navigation.ToBaseRelativePath(Navigation.Uri);
+        Navigation.LocationChanged += LocationChangedHandler;
+    }
+
+    private void LocationChangedHandler(object? sender, LocationChangedEventArgs e)
+    {
+        _currentUrl = Navigation.ToBaseRelativePath(e.Location);
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        Navigation.LocationChanged -= LocationChangedHandler;
+    }
+}

@@ -39,7 +39,7 @@ internal static class ServiceCollectionExtensions
     public static void AddHttpClients(this IHostApplicationBuilder builder)
     {
         string token = builder.Configuration["BiznesGovKey"]
-            ?? throw new NullReferenceException("No JWT for authorization");
+            ?? throw new NullReferenceException("No JWT for authorization - check your configuration");
 
         builder.Services.AddHttpClient(HttpClientKeys.BiznesGovKey, options =>
         {

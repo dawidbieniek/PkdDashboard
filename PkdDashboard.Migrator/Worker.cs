@@ -50,20 +50,20 @@ internal class Worker(IServiceProvider serviceProvider, IHostApplicationLifetime
             try
             {
                 _logger.Value.LogInformation("Processing {MigratorName}", migratorName);
-                await migrator.EnsureDbContextCreatedAsync(cancellationToken);
 
                 IEnumerable<string> pendingMigrations = await migrator.GetPendingMigrationsAsync(cancellationToken);
 
-                if (!pendingMigrations.Any())
+                if (pendingMigrations.Any())
                 {
-                    _logger.Value.LogInformation("No migrations to apply for {MigratorName}", migratorName);
-                    continue;
+                    await PerformMigrationsAsync(migrator, cancellationToken);
+
+                    foreach (string migration in pendingMigrations)
+                        _logger.Value.LogDebug("Migrations applied: {Migration}", migration);
                 }
+                else
+                    _logger.Value.LogInformation("No migrations to apply for {MigratorName}", migratorName);
 
-                await PerformMigrationsAsync(migrator, cancellationToken);
-
-                foreach (string migration in pendingMigrations)
-                    _logger.Value.LogDebug("Migrations applied: {Migration}", migration);
+                await migrator.EnsureDbContextCreatedAsync(cancellationToken);
             }
             catch (Exception ex)
             {

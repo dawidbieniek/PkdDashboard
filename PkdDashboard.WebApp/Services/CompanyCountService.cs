@@ -2,6 +2,7 @@
 
 using PkdDashboard.WebApp.Data;
 using PkdDashboard.WebApp.Data.Entities;
+using PkdDashboard.WebApp.Services.Data;
 
 namespace PkdDashboard.WebApp.Services;
 
@@ -9,19 +10,24 @@ internal class CompanyCountService(IDbContextFactory<AppDbContext> contextFactor
 {
     private readonly IDbContextFactory<AppDbContext> _contextFactory = contextFactory;
 
-    public IQueryable<CompanyCount> GetListQuery(DateOnly day, string? searchQuery = null)
+    public async Task<PagedResult<CompanyCount>> GetListQueryAsync(DateOnly day, PagerSearchQuery pagerSearchQuery)
     {
-        var query = _contextFactory.CreateDbContext().CompanyCounts
-                .Where(cc => cc.Day == day)
-                .Include(cc => cc.PkdEntry)
-                .AsNoTracking();
+        using var dbContext = _contextFactory.CreateDbContext();
 
-        if (!string.IsNullOrEmpty(searchQuery))
-        {
-            var normalizedSearchQuery = searchQuery.ToLower().Trim();
-            query = query.Where(cc => cc.PkdEntry.PkdString.Contains(normalizedSearchQuery, StringComparison.CurrentCultureIgnoreCase));
-        }
+        var query = dbContext.CompanyCounts
+            .Where(cc => cc.Day == day)
+            .Include(cc => cc.PkdEntry)
+            .AsNoTracking()
+            .MatchSearchQuery(cc => cc.PkdEntry.PkdString, pagerSearchQuery);
 
-        return query;
+        var count = await query.CountAsync();
+        var items = await query
+            .OrderBy(cc => cc.PkdEntry.Division)
+            .ThenBy(cc => cc.PkdEntry.Group)
+            .ThenBy(cc => cc.PkdEntry.Class)
+            .SkipTake(pagerSearchQuery)
+            .ToListAsync();
+
+        return new(items, count);
     }
 }

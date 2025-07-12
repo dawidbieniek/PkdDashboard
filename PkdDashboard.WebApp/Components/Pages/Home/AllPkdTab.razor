@@ -30,31 +30,34 @@
 </MudTable>
 
 @code {
-    // TODO: Try to make async
-    private Task<TableData<CompanyCountDiff>> ServerReload(TableState state, CancellationToken token)
+    private async Task<TableData<CompanyCountDiff>> ServerReload(TableState state, CancellationToken token)
     {
         var today = DateUtil.Today;
         var previousDay = DateUtil.Today.AddDays(-1);
 
-        var todayCounts = CompanyCountService.GetListQuery(today).ToDictionary(cc => cc.PkdEntry, cc => cc);
-        var previousCounts = CompanyCountService.GetListQuery(previousDay).ToDictionary(cc => cc.PkdEntry, cc => cc);
-
+        var todayCounts = (await CompanyCountService.GetListQueryAsync(today, new(PagerQuery.All, null)))
+            .Items
+            .ToDictionary(cc => cc.PkdEntry, cc => cc);
+        var previousCounts = (await CompanyCountService.GetListQueryAsync(previousDay, new(PagerQuery.All, null)))
+            .Items
+            .ToDictionary(cc => cc.PkdEntry, cc => cc);
+        
         var allPkds = todayCounts.Keys.ToHashSet();
         allPkds.Union(previousCounts.Keys.ToHashSet());
 
         var allCounts = allPkds
-            .Take(state.PageSize).Skip(state.PageSize * state.Page)
+            .SkipTake(new(state))
             .Select(pkd => new CompanyCountDiff(
                 pkd.PkdString,
                 todayCounts.TryGetValue(pkd, out var todayCount) ? todayCount.Count : 0,
                 previousCounts.TryGetValue(pkd, out var previousCount) ? previousCount.Count : 0
             )).ToList();
 
-        return Task.FromResult(new TableData<CompanyCountDiff>()
+        return new TableData<CompanyCountDiff>()
         {
             TotalItems = allPkds.Count,
             Items = allCounts
-        });
+        };
     }
 
     private record CompanyCountDiff(string PkdString, int CurrentCount, int PreviousCount)

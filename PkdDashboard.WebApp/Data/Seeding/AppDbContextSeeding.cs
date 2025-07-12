@@ -63,12 +63,12 @@ internal class AppDbContextSeeding(ILogger<AppDbContextSeeding> logger) : ISeede
 
         var recordsInFile = csv.GetRecordsAsync<PkdEntry>(cancellationToken);
 
-        var recordsInDatabase = await context.PkdEntries.Select(x => x.PkdString).ToHashSetAsync(cancellationToken);
+        var recordsInDatabase = await context.PkdEntries.ToHashSetAsync(cancellationToken);
 
         List<PkdEntry> recordsToAdd = [];
         await foreach (var record in recordsInFile)
         {
-            if (!recordsInDatabase.Contains(record.PkdString))
+            if (!recordsInDatabase.Contains(record))
                 recordsToAdd.Add(record);
         }
 

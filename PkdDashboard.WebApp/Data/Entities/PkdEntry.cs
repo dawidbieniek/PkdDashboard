@@ -1,4 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using MudBlazor;
+
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace PkdDashboard.WebApp.Data.Entities;
 
@@ -27,11 +29,12 @@ internal class PkdEntry : Entity
                 && Section == other.Section
                 && Division == other.Division
                 && Group == other.Group
-                && Class == other.Class);
+                && Class == other.Class
+                && PkdSuffix == other.PkdSuffix);
     }
 
     public override int GetHashCode()
     {
-        return HashCode.Combine(Section, Division, Group, Class);
+        return HashCode.Combine(Section, Division, Group, Class, PkdSuffix);
     }
 }

@@ -19,7 +19,7 @@ internal class CompanyCountService(IDbContextFactory<AppDbContext> contextFactor
         if (!string.IsNullOrEmpty(searchQuery))
         {
             var normalizedSearchQuery = searchQuery.ToLower().Trim();
-            query = query.Where(cc => cc.PkdEntry.PkdString.ToLower().Contains(normalizedSearchQuery));
+            query = query.Where(cc => cc.PkdEntry.PkdString.Contains(normalizedSearchQuery, StringComparison.CurrentCultureIgnoreCase));
         }
 
         return query;

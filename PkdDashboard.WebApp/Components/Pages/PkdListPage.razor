@@ -10,7 +10,13 @@
 <PageTitle>Lista PKD</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="h-100">
-    <MudTable Class="full-height-table" ServerData="ServerReload" Hover>
+    <MudTable @ref="_table" Class="full-height-table" ServerData="ServerReload" Hover>
+        <ToolBarContent>
+            <MudText Typo="Typo.h6">Lista PKD</MudText>
+            <MudSpacer />
+            <MudTextField T="string" ValueChanged="@(s => OnSearch(s))" Placeholder="Wyszukaj" Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+        </ToolBarContent>
         <ColGroup>
             <col style="width: 60px" />
             <col style="width: 60px" />
@@ -42,16 +48,18 @@
 </MudContainer>
 
 @code {
+    private MudTable<PkdEntry> _table = default!;
+    private string _searchQuery = string.Empty;
+
     private async Task<TableData<PkdEntry>> ServerReload(TableState state, CancellationToken token)
     {
-        var query = PkdService.GetListQuery().OrderBy(x=>x.Division).ThenBy(x=>x.Group).ThenBy(x=>x.Class);
+        var data = await PkdService.GetListQueryAsync(new(state, _searchQuery));
+        return data.ToTableData();
+    }
 
-        var total = await query.CountAsync();
-        var data = await query
-            .Skip(state.Page * state.PageSize)
-            .Take(state.PageSize)
-            .ToListAsync();
-
-        return new TableData<PkdEntry>() { TotalItems = total, Items = data };
+    private void OnSearch(string text)
+    {
+        _searchQuery = text;
+        _table.ReloadServerData();
     }
 }

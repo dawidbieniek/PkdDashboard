@@ -17,7 +17,7 @@ var dataPolling = builder.AddProject<Projects.PkdDashboard_DataPollingService>(S
 
 builder.AddProject<Projects.PkdDashboard_WebApp>(ServiceKeys.WebApp)
     .WithReference(database).WaitFor(database)
-    .WithReference(dataPolling).WaitFor(dataPolling)
+    .WithReference(dataPolling)
     .WaitForCompletion(migrator);
 
 builder.Build().Run();

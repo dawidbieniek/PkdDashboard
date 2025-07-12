@@ -1,0 +1,62 @@
+﻿@using PkdDashboard.Shared.DateUtil
+
+@inject CompanyCountService CompanyCountService
+
+<MudTable T="CompanyCountDiff" ServerData="ServerReload" Height="75vh" Hover>
+    <HeaderContent>
+        <MudTh>PKD</MudTh>
+        <MudTh>Poprzednio</MudTh>
+        <MudTh>Obecnie</MudTh>
+        <MudTh>Różnica</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Pkd">@context.PkdString</MudTd>
+        <MudTd DataLabel="Previous">@context.PreviousCount</MudTd>
+        <MudTd DataLabel="Current">@context.CurrentCount</MudTd>
+        @{
+            var diffColor = context.Difference > 0
+                ? Color.Success
+                : Color.Error;
+        }
+        <MudTd DataLabel="Difference">
+            <MudText Typo="Typo.body2" Color="diffColor">@context.PkdString</MudText>
+        </MudTd>
+    </RowTemplate>
+    <PagerContent>
+        <MudTablePager HideRowsPerPage InfoFormat="@GlobalSettings.PagerInfoFormat" />
+    </PagerContent>
+</MudTable>
+
+@code {
+    // TODO: Try to make async
+    private Task<TableData<CompanyCountDiff>> ServerReload(TableState state, CancellationToken token)
+    {
+        var today = DateUtil.Today;
+        var previousDay = DateUtil.Today.AddDays(-1);
+
+        var todayCounts = CompanyCountService.GetListQuery(today).ToDictionary(cc => cc.PkdEntry, cc => cc);
+        var previousCounts = CompanyCountService.GetListQuery(previousDay).ToDictionary(cc => cc.PkdEntry, cc => cc);
+
+        var allPkds = todayCounts.Keys.ToHashSet();
+        allPkds.Union(previousCounts.Keys.ToHashSet());
+
+        var allCounts = allPkds
+            .Take(state.PageSize).Skip(state.PageSize * state.Page)
+            .Select(pkd => new CompanyCountDiff(
+                pkd.PkdString,
+                todayCounts.TryGetValue(pkd, out var todayCount) ? todayCount.Count : 0,
+                previousCounts.TryGetValue(pkd, out var previousCount) ? previousCount.Count : 0
+            )).ToList();
+
+        return Task.FromResult(new TableData<CompanyCountDiff>()
+        {
+            TotalItems = allCounts.Count,
+            Items = allCounts
+        });
+    }
+
+    private record CompanyCountDiff(string PkdString, int CurrentCount, int PreviousCount)
+    {
+        public int Difference => CurrentCount - PreviousCount;
+    }
+}

@@ -16,6 +16,7 @@
   <ItemGroup>
     <ProjectReference Include="..\PkdDashboard.Global\PkdDashboard.Global.csproj" />
     <ProjectReference Include="..\PkdDashboard.ServiceDefaults\PkdDashboard.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\PkdDashboard.Shared\PkdDashboard.Shared.csproj" />
   </ItemGroup>
 
 </Project>

@@ -16,6 +16,7 @@ public static class ServiceCollectionsExtensions
     internal static IServiceCollection AddWebAppServices(this IServiceCollection services)
     {
         services.AddScoped<PkdService>();
+        services.AddScoped<CompanyCountService>();
 
         return services;
     }

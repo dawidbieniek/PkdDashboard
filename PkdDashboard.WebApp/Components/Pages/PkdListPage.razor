@@ -2,7 +2,6 @@
 @using Microsoft.EntityFrameworkCore
 @using PkdDashboard.WebApp.Components.Layout
 
-@layout MainLayout
 @rendermode InteractiveServer
 @attribute [Authorize]
 
@@ -11,7 +10,7 @@
 <PageTitle>Lista PKD</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge">
-    <MudTable @ref="_table" ServerData="ServerReload" Height="75vh" Hover>
+    <MudTable ServerData="ServerReload" Height="75vh" Hover>
         <ColGroup>
             <col style="width: 60px" />
             <col style="width: 60px" />
@@ -37,20 +36,12 @@
             <MudTd DataLabel="Description">@context.Description</MudTd>
         </RowTemplate>
         <PagerContent>
-            <MudTablePager HideRowsPerPage InfoFormat="{first_item}-{last_item} z {all_items}" />
+            <MudTablePager HideRowsPerPage InfoFormat="@GlobalSettings.PagerInfoFormat" />
         </PagerContent>
     </MudTable>
 </MudContainer>
 
 @code {
-    private MudTable<PkdEntry> _table = default!;
-
-    protected async override Task OnAfterRenderAsync(bool firstRender)
-    {
-        if(firstRender)
-            await _table.ReloadServerData();
-    }
-
     private async Task<TableData<PkdEntry>> ServerReload(TableState state, CancellationToken token)
     {
         var query = PkdService.GetListQuery().OrderBy(x=>x.Division).ThenBy(x=>x.Group).ThenBy(x=>x.Class);
@@ -60,7 +51,7 @@
             .Skip(state.Page * state.PageSize)
             .Take(state.PageSize)
             .ToListAsync();
-        // Return the data
+
         return new TableData<PkdEntry>() { TotalItems = total, Items = data };
     }
 }

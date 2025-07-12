@@ -1,46 +1,54 @@
-﻿@using PkdDashboard.Shared.DateUtil
+﻿@page "/"
+@using PkdDashboard.Shared.DateUtil
 
 @rendermode InteractiveServer
+@attribute [Authorize]
 
 @inject CompanyCountService CompanyCountService
 
-<MudStack>
-    <MudStack Row Class="h-100">
-        <MudDatePicker @bind-Date="PreviousDay" IsDateDisabledFunc="x => !_availableDates.Contains(x)" Label="Poprzednia data" />
-        <MudDatePicker @bind-Date="CurrentDay" IsDateDisabledFunc="x => !_availableDates.Contains(x)" Label="Obecna data" />
-        <MudSpacer />
-    </MudStack>
-    <MudTable T="CompanyCountDiff" @ref="_table" Class="full-height-table" ServerData="ServerReload" Hover Dense>
-        <ToolBarContent>
-            <MudText Typo="Typo.h6">Zmiany liczby firm</MudText>
-            <MudSpacer />
-            <MudTextField T="string"
-                          Class="mt-0"
-                          ValueChanged="@(s => OnSearch(s))"
-                          Placeholder="Wyszukaj"
-                          Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
-                          IconSize="Size.Medium">
-            </MudTextField>
-        </ToolBarContent>
-        <HeaderContent>
-            <MudTh>PKD</MudTh>
-            <MudTh>Poprzednio</MudTh>
-            <MudTh>Obecnie</MudTh>
-            <MudTh>Różnica</MudTh>
-        </HeaderContent>
-        <RowTemplate>
-            <MudTd DataLabel="Pkd">@context.PkdString</MudTd>
-            <MudTd DataLabel="Previous">@context.PreviousCount</MudTd>
-            <MudTd DataLabel="Current">@context.CurrentCount</MudTd>
-            <MudTd DataLabel="Difference">
-                <MudText Typo="Typo.body2" Color="GetDifferenceColor(context.Difference)">@context.Difference</MudText>
-            </MudTd>
-        </RowTemplate>
-        <PagerContent>
-            <MudTableCommonPager />
-        </PagerContent>
-    </MudTable>
-</MudStack>
+<PageTitle>Dashboard</PageTitle>
+
+<MudContainer Class="h-100" MaxWidth="MaxWidth.ExtraLarge">
+    <MudPaper Elevation="2">
+        <MudStack>
+            <MudStack Row Class="h-100 px-2">
+                <MudDatePicker @bind-Date="PreviousDay" IsDateDisabledFunc="x => !_availableDates.Contains(x)" Label="Poprzednia data" />
+                <MudDatePicker @bind-Date="CurrentDay" IsDateDisabledFunc="x => !_availableDates.Contains(x)" Label="Obecna data" />
+                <MudSpacer />
+            </MudStack>
+            <MudTable T="CompanyCountDiff" @ref="_table" Class="full-height-table" ServerData="ServerReload" Hover Dense>
+                <ToolBarContent>
+                    <MudText Typo="Typo.h6">Zmiany liczby firm</MudText>
+                    <MudSpacer />
+                    <MudTextField T="string"
+                                  Class="mt-0"
+                                  ValueChanged="@(s => OnSearch(s))"
+                                  Placeholder="Wyszukaj"
+                                  Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
+                                  IconSize="Size.Medium">
+                    </MudTextField>
+                </ToolBarContent>
+                <HeaderContent>
+                    <MudTh>PKD</MudTh>
+                    <MudTh>Poprzednio</MudTh>
+                    <MudTh>Obecnie</MudTh>
+                    <MudTh>Różnica</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Pkd">@context.PkdString</MudTd>
+                    <MudTd DataLabel="Previous">@context.PreviousCount</MudTd>
+                    <MudTd DataLabel="Current">@context.CurrentCount</MudTd>
+                    <MudTd DataLabel="Difference">
+                        <MudText Typo="Typo.body2" Color="GetDifferenceColor(context.Difference)">@context.Difference</MudText>
+                    </MudTd>
+                </RowTemplate>
+                <PagerContent>
+                    <MudTableCommonPager />
+                </PagerContent>
+            </MudTable>
+        </MudStack>
+    </MudPaper>
+</MudContainer>
 
 @code {
     private MudTable<CompanyCountDiff> _table = default!;

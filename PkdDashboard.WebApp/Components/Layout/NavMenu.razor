@@ -3,10 +3,13 @@
         <MudText Typo="Typo.h6" Align="Align.Center">PkdDashboard</MudText>
         <MudDivider DividerType="DividerType.FullWidth" Style="border-width:3px"/>
     </MudNavLink>
-    <MudNavLink Href="" Match="NavLinkMatch.All">
-        <MudIcon Icon="@Icons.Material.Outlined.Analytics" /> Dashboard
+    <MudNavLink Href="/" Match="NavLinkMatch.All">
+        <MudIcon Icon="@Icons.Material.Outlined.Analytics" /> Wszystkie zmiany
     </MudNavLink>
-    <MudNavLink Href="pkd">
+    <MudNavLink Href="/pkd">
+        <MudIcon Icon="@Icons.Material.Filled.MultilineChart" /> Zmiany PKD
+    </MudNavLink>
+    <MudNavLink Href="/pkd/list">
         <MudIcon Icon="@Icons.Material.Filled.FormatListBulleted" /> Lista PKD
     </MudNavLink>
 </MudNavMenu>

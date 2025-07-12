@@ -6,10 +6,22 @@
     height: 100%;
 }
 
+    .full-height-table.mud-table > * {
+        flex-shrink: 0;
+    }
+
     .full-height-table.mud-table > .mud-table-container {
         -webkit-flex-grow: 1;
         flex-grow: 1;
+        flex-shrink: 1;
     }
-    .full-height-table.mud-table > .mud-table-pagination {
-        flex-shrink: 0;
+
+
+.full-height-tab.mud-tabs {
+    height: 100%;
+}
+
+    .full-height-tab.mud-tabs > .mud-tabs-panels {
+        height: 100%;
+        overflow-y: auto;
     }

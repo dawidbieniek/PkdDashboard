@@ -16,10 +16,12 @@
         @{
             var diffColor = context.Difference > 0
                 ? Color.Success
-                : Color.Error;
+                : context.Difference == 0
+                    ? Color.Inherit
+                    : Color.Error;
         }
         <MudTd DataLabel="Difference">
-            <MudText Typo="Typo.body2" Color="diffColor">@context.PkdString</MudText>
+            <MudText Typo="Typo.body2" Color="diffColor">@context.Difference</MudText>
         </MudTd>
     </RowTemplate>
     <PagerContent>
@@ -41,6 +43,7 @@
         allPkds.Union(previousCounts.Keys.ToHashSet());
 
         var allCounts = allPkds
+            .Take(state.PageSize).Skip(state.PageSize * state.Page)
             .Select(pkd => new CompanyCountDiff(
                 pkd.PkdString,
                 todayCounts.TryGetValue(pkd, out var todayCount) ? todayCount.Count : 0,
@@ -49,7 +52,7 @@
 
         return Task.FromResult(new TableData<CompanyCountDiff>()
         {
-            TotalItems = allCounts.Count,
+            TotalItems = allPkds.Count,
             Items = allCounts
         });
     }

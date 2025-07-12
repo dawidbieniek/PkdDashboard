@@ -41,7 +41,6 @@
         allPkds.Union(previousCounts.Keys.ToHashSet());
 
         var allCounts = allPkds
-            .Take(state.PageSize).Skip(state.PageSize * state.Page)
             .Select(pkd => new CompanyCountDiff(
                 pkd.PkdString,
                 todayCounts.TryGetValue(pkd, out var todayCount) ? todayCount.Count : 0,

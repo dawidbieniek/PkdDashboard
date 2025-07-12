@@ -4,6 +4,9 @@ namespace PkdDashboard.DataPollingService.Jobs.QueryCompanyCounts;
 
 internal class QueryCompanyCountsJob(ILogger<QueryCompanyCountsJob> logger, DatabaseService databaseService, HttpService httpService) : IQueryCompanyCountsJob
 {
+    private const int BatchSize = 20;
+    private const int BatchDelayMs = 4000;
+
     private readonly ILogger<QueryCompanyCountsJob> _logger = logger;
     private readonly DatabaseService _databaseService = databaseService;
     private readonly HttpService _httpService = httpService;
@@ -24,17 +27,30 @@ internal class QueryCompanyCountsJob(ILogger<QueryCompanyCountsJob> logger, Data
             pkdsForQuery = [.. pkdsForQuery.Take(1000)];
         }
 
-        _logger.LogInformation("Querying company counts for {count} PKDs", pkdsForQuery.Count);
+        _logger.LogInformation("Querying company counts for {count} PKDs in {batchCount} batches of size {batchSize}", pkdsForQuery.Count, (pkdsForQuery.Count / BatchSize) + 1, BatchSize);
 
-        foreach (var pkd in pkdsForQuery)
+        for (int i = 0; i < pkdsForQuery.Count; i += BatchSize)
         {
-            int? count = await _httpService.GetNumberOfCompaniesInPkdAsync(pkd.ToQueryString(), cancellationToken);
-            if (count is null)
-                return;
+            var batch = pkdsForQuery.Skip(i).Take(BatchSize).ToList();
+            _logger.LogInformation("Processing batch {batchIndex} with {batchSize} PKDs", i / BatchSize + 1, batch.Count);
 
-            _logger.LogDebug("PKD: {pkd}, Count: {count}", pkd.ToQueryString(), count);
+            var counts = (await _httpService.RequestBatchOfNumberOfCompaniesInPkdAsync([.. batch.Select(pkd => pkd.ToQueryString())], cancellationToken)).ToList();
 
-            await _databaseService.SaveCompanyCountAsync(today, pkd, count.Value, cancellationToken);
+            for (int j = i; j < i + batch.Count && j < pkdsForQuery.Count; j++)
+            {
+                var pkd = pkdsForQuery[j];
+                int? count = counts[j - i];
+                if (count is null)
+                {
+                    _logger.LogError("Failed to retrieve company count for PKD: {pkd}", pkd.ToQueryString());
+                    continue;
+                }
+                _logger.LogDebug("PKD: {pkd}, Count: {count}", pkd.ToQueryString(), count);
+                await _databaseService.SaveCompanyCountAsync(today, pkd, count.Value, cancellationToken);
+            }
+
+            _logger.LogInformation("Batch {batchIndex} processed. Sleeping for {delay} ms", i / BatchSize + 1, BatchDelayMs);
+            await Task.Delay(BatchDelayMs, cancellationToken);
         }
 
         _logger.LogInformation("Company count query completed for {date}", today);

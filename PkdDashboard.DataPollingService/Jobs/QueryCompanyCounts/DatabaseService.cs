@@ -14,7 +14,6 @@ internal class DatabaseService(PkdDbContext dbContext)
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0305:Simplify collection initialization", Justification = "<Pending>")]
     public List<PkdEntry> GetPkdsForQuery()
         => _dbContext.PkdEntries
-            .Where(x => x.Id <= 5)  // HACK: For testing
             .ToList();
 
     public Task SaveCompanyCountAsync(DateOnly day, PkdEntry pkd, int count, CancellationToken cancellationToken)

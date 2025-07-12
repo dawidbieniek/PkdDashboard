@@ -11,11 +11,11 @@
             <form method="post" action="Account/Logout">
                 <AntiforgeryToken />
                 <input type="hidden" name="ReturnUrl" value="@_currentUrl" />
-                <MudButton Variant="Variant.Filled" Color="Color.Error" ButtonType="ButtonType.Submit" StartIcon="@Icons.Material.Filled.Logout">Logout</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Error" ButtonType="ButtonType.Submit" StartIcon="@Icons.Material.Filled.Logout">Wyloguj</MudButton>
             </form>
         </Authorized>
         <NotAuthorized>
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="@($"/Account/Login?ReturnUrl={_currentUrl}")" StartIcon="@Icons.Material.Filled.Login">Login</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="@($"/Account/Login?ReturnUrl={_currentUrl}")" StartIcon="@Icons.Material.Filled.Login">Zaloguj</MudButton>
         </NotAuthorized>
     </AuthorizeView>
 </MudStack>

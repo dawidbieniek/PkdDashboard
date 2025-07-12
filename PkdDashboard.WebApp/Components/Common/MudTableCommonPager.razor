@@ -1,0 +1,7 @@
+﻿<MudTablePager InfoFormat="@PagerInfoFormat" RowsPerPageString="@PagerRowsPerPageString" PageSizeOptions="PagerPageSizes" />
+
+@code {
+    public const string PagerInfoFormat = "{first_item}-{last_item} z {all_items}";
+    public const string PagerRowsPerPageString = "Wierszy na stronę:";
+    public static readonly int[] PagerPageSizes = [10, 20, 50];
+}

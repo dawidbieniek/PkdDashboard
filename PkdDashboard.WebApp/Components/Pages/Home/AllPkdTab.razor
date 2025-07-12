@@ -2,7 +2,7 @@
 
 @inject CompanyCountService CompanyCountService
 
-<MudTable T="CompanyCountDiff" ServerData="ServerReload" Height="75vh" Hover>
+<MudTable T="CompanyCountDiff" Class="full-height-table" ServerData="ServerReload" Hover>
     <HeaderContent>
         <MudTh>PKD</MudTh>
         <MudTh>Poprzednio</MudTh>
@@ -23,7 +23,7 @@
         </MudTd>
     </RowTemplate>
     <PagerContent>
-        <MudTablePager HideRowsPerPage InfoFormat="@GlobalSettings.PagerInfoFormat" />
+        <MudTableCommonPager />
     </PagerContent>
 </MudTable>
 

@@ -9,8 +9,8 @@
 
 <PageTitle>Lista PKD</PageTitle>
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge">
-    <MudTable ServerData="ServerReload" Height="75vh" Hover>
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="h-100">
+    <MudTable Class="full-height-table" ServerData="ServerReload" Hover>
         <ColGroup>
             <col style="width: 60px" />
             <col style="width: 60px" />
@@ -36,7 +36,7 @@
             <MudTd DataLabel="Description">@context.Description</MudTd>
         </RowTemplate>
         <PagerContent>
-            <MudTablePager HideRowsPerPage InfoFormat="@GlobalSettings.PagerInfoFormat" />
+            <MudTableCommonPager/>
         </PagerContent>
     </MudTable>
 </MudContainer>

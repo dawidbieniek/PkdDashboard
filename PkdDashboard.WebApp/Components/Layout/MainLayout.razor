@@ -3,15 +3,15 @@
 <AppThemeProvider @rendermode="InteractiveServer" />
 <MudPopoverProvider @rendermode="InteractiveServer" />
 
-<MudLayout>
+<MudLayout Style="height: 100vh">
     <MudAppBar>
         <TopBar />
     </MudAppBar>
     <MudDrawer Open="true">
         <NavMenu />
     </MudDrawer>
-    <MudMainContent>
-        <div class="pa-4">
+    <MudMainContent Class="h-100">
+        <div class="pa-4 h-100">
             @Body
         </div>
     </MudMainContent>

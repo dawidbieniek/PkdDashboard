@@ -1,0 +1,15 @@
+﻿.full-height-table.mud-table {
+    display: flex;
+    -ms-flex-direction: column;
+    -webkit-flex-direction: column;
+    flex-direction: column;
+    height: 100%;
+}
+
+    .full-height-table.mud-table > .mud-table-container {
+        -webkit-flex-grow: 1;
+        flex-grow: 1;
+    }
+    .full-height-table.mud-table > .mud-table-pagination {
+        flex-shrink: 0;
+    }

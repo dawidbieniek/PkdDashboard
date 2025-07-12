@@ -2,7 +2,18 @@
 
 @inject CompanyCountService CompanyCountService
 
-<MudTable T="CompanyCountDiff" Class="full-height-table" ServerData="ServerReload" Hover>
+<MudTable T="CompanyCountDiff" @ref="_table" Class="full-height-table" ServerData="ServerReload" Hover>
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">Zmiany liczby firm</MudText>
+        <MudSpacer />
+        <MudTextField T="string"
+                      Class="mt-0"
+                      ValueChanged="@(s => OnSearch(s))"
+                      Placeholder="Wyszukaj"
+                      Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
+                      IconSize="Size.Medium">
+        </MudTextField>
+    </ToolBarContent>
     <HeaderContent>
         <MudTh>PKD</MudTh>
         <MudTh>Poprzednio</MudTh>
@@ -13,15 +24,8 @@
         <MudTd DataLabel="Pkd">@context.PkdString</MudTd>
         <MudTd DataLabel="Previous">@context.PreviousCount</MudTd>
         <MudTd DataLabel="Current">@context.CurrentCount</MudTd>
-        @{
-            var diffColor = context.Difference > 0
-                ? Color.Success
-                : context.Difference == 0
-                    ? Color.Inherit
-                    : Color.Error;
-        }
         <MudTd DataLabel="Difference">
-            <MudText Typo="Typo.body2" Color="diffColor">@context.Difference</MudText>
+            <MudText Typo="Typo.body2" Color="GetDifferenceColor(context.Difference)">@context.Difference</MudText>
         </MudTd>
     </RowTemplate>
     <PagerContent>
@@ -30,18 +34,21 @@
 </MudTable>
 
 @code {
+    private MudTable<CompanyCountDiff> _table = default!;
+    private string _searchQuery = string.Empty;
+
     private async Task<TableData<CompanyCountDiff>> ServerReload(TableState state, CancellationToken token)
     {
         var today = DateUtil.Today;
         var previousDay = DateUtil.Today.AddDays(-1);
 
-        var todayCounts = (await CompanyCountService.GetListQueryAsync(today, new(PagerQuery.All, null)))
+        var todayCounts = (await CompanyCountService.GetListQueryAsync(today, new(PagerQuery.All, _searchQuery)))
             .Items
             .ToDictionary(cc => cc.PkdEntry, cc => cc);
-        var previousCounts = (await CompanyCountService.GetListQueryAsync(previousDay, new(PagerQuery.All, null)))
+        var previousCounts = (await CompanyCountService.GetListQueryAsync(previousDay, new(PagerQuery.All, _searchQuery)))
             .Items
             .ToDictionary(cc => cc.PkdEntry, cc => cc);
-        
+
         var allPkds = todayCounts.Keys.ToHashSet();
         allPkds.Union(previousCounts.Keys.ToHashSet());
 
@@ -59,6 +66,19 @@
             Items = allCounts
         };
     }
+
+    private void OnSearch(string text)
+    {
+        _searchQuery = text;
+        _table.ReloadServerData();
+    }
+
+    private Color GetDifferenceColor(int diff)
+        => diff > 0
+            ? Color.Success
+            : diff == 0
+                ? Color.Inherit
+                : Color.Error;
 
     private record CompanyCountDiff(string PkdString, int CurrentCount, int PreviousCount)
     {

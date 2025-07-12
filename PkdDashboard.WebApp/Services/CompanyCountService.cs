@@ -18,7 +18,7 @@ internal class CompanyCountService(IDbContextFactory<AppDbContext> contextFactor
             .Where(cc => cc.Day == day)
             .Include(cc => cc.PkdEntry)
             .AsNoTracking()
-            .MatchSearchQuery(cc => cc.PkdEntry.PkdString, pagerSearchQuery);
+            .MatchSearchQuery(ccx => ccx.PkdEntry.PkdString, pagerSearchQuery);
 
         var count = await query.CountAsync();
         var items = await query

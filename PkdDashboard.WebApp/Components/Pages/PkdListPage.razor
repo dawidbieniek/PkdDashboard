@@ -14,8 +14,13 @@
         <ToolBarContent>
             <MudText Typo="Typo.h6">Lista PKD</MudText>
             <MudSpacer />
-            <MudTextField T="string" ValueChanged="@(s => OnSearch(s))" Placeholder="Wyszukaj" Adornment="Adornment.Start"
-                          AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+            <MudTextField T="string"
+                          Class="mt-0"
+                          ValueChanged="@(s => OnSearch(s))"
+                          Placeholder="Wyszukaj"
+                          Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
+                          IconSize="Size.Medium">
+            </MudTextField>
         </ToolBarContent>
         <ColGroup>
             <col style="width: 60px" />
@@ -42,7 +47,7 @@
             <MudTd DataLabel="Description">@context.Description</MudTd>
         </RowTemplate>
         <PagerContent>
-            <MudTableCommonPager/>
+            <MudTableCommonPager />
         </PagerContent>
     </MudTable>
 </MudContainer>

@@ -30,11 +30,14 @@ public static class IEnumerableExtensions
         if (!pagerSearchQuery.ShouldSearch)
             return source;
 
-        var parameter = fieldSelector.Parameters[0];
-        var fieldExpr = Expression.Invoke(fieldSelector, parameter);
+        // Create a new parameter for the lambda
+        var parameter = Expression.Parameter(typeof(T), "x");
+
+        // Replace the parameter in the fieldSelector with the new parameter
+        var replacer = new ParameterReplaceVisitor(fieldSelector.Parameters[0], parameter);
+        var fieldExpr = replacer.Visit(fieldSelector.Body);
 
         var notNull = Expression.NotEqual(fieldExpr, Expression.Constant(null, typeof(string)));
-
         var normalizedField = Expression.Call(fieldExpr, nameof(string.ToLower), Type.EmptyTypes);
         var normalizedQuery = Expression.Constant(pagerSearchQuery.NormalizedSearchQuery);
 
@@ -45,5 +48,19 @@ public static class IEnumerableExtensions
         var lambda = Expression.Lambda<Func<T, bool>>(body, parameter);
 
         return source.Where(lambda);
+    }
+
+    // Helper class to replace parameters in an expression tree
+    class ParameterReplaceVisitor(ParameterExpression oldParameter, ParameterExpression newParameter) : ExpressionVisitor
+    {
+        private readonly ParameterExpression _oldParameter = oldParameter;
+        private readonly ParameterExpression _newParameter = newParameter;
+
+        protected override Expression VisitParameter(ParameterExpression node)
+        {
+            return node == _oldParameter 
+                ? _newParameter 
+                : base.VisitParameter(node);
+        }
     }
 }

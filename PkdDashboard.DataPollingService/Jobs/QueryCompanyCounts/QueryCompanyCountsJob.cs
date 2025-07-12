@@ -13,7 +13,7 @@ internal class QueryCompanyCountsJob(ILogger<QueryCompanyCountsJob> logger, Data
 
     public async Task ExecuteAsync(CancellationToken cancellationToken)
     {
-        DateOnly today = DateUtil.Today;
+        DateOnly today = DateUtil.TodayDate;
         _logger.LogInformation("Starting company count query for {date}", today);
 
         if (_databaseService.IsTodayEntryPresent(today))

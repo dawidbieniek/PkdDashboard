@@ -4,6 +4,7 @@
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>preview</LangVersion>
     <UserSecretsId>aspnet-PkdDashboard.WebApp-d91f45af-1b87-4ded-90c7-faa6383a73a3</UserSecretsId>
   </PropertyGroup>
 

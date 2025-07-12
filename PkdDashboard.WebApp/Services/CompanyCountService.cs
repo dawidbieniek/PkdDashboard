@@ -10,6 +10,18 @@ internal class CompanyCountService(IDbContextFactory<AppDbContext> contextFactor
 {
     private readonly IDbContextFactory<AppDbContext> _contextFactory = contextFactory;
 
+    public async Task<List<DateTime>> GetAllDatesWithEntryAsync()
+    {
+        using var dbContext = _contextFactory.CreateDbContext();
+        var distinctDays = await dbContext.CompanyCounts
+            .Select(cc => cc.Day)
+            .Distinct()
+            .ToListAsync();
+
+        // Converting to DateTime in memory, because SQL won't do this
+        return [.. distinctDays.Select(day => day.ToDateTime(TimeOnly.MinValue))];
+    }
+
     public async Task<PagedResult<CompanyCount>> GetListQueryAsync(DateOnly day, PagerSearchQuery pagerSearchQuery)
     {
         using var dbContext = _contextFactory.CreateDbContext();

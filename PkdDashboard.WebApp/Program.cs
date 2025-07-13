@@ -35,6 +35,7 @@ builder.Services.AddAntiforgery();
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
+    .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<AuthDbContext>()
     .AddSignInManager()
     .AddDefaultTokenProviders();
@@ -44,6 +45,13 @@ builder.Services.AddMudServices();
 var app = builder.Build();
 
 app.MapDefaultEndpoints();
+
+// Seed roles
+using (var scope = app.Services.CreateScope())
+{
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+    await SeedRolesAsync(roleManager);
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -65,3 +73,16 @@ app.MapRazorComponents<App>()
 app.MapAdditionalIdentityEndpoints();
 
 app.Run();
+
+static async Task SeedRolesAsync(RoleManager<IdentityRole> roleManager)
+{
+    if (!await roleManager.RoleExistsAsync(UserRoles.Admin))
+    {
+        await roleManager.CreateAsync(new IdentityRole(UserRoles.Admin));
+    }
+    
+    if (!await roleManager.RoleExistsAsync(UserRoles.User))
+    {
+        await roleManager.CreateAsync(new IdentityRole(UserRoles.User));
+    }
+}

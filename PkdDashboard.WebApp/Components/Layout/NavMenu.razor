@@ -1,4 +1,5 @@
-﻿<MudNavMenu>
+﻿@using PkdDashboard.WebApp.Data.Entities.Auth
+<MudNavMenu>
     <MudNavLink Href="/" Match="NavLinkMatch.All">
         <MudText Typo="Typo.h6" Align="Align.Center">PkdDashboard</MudText>
         <MudDivider DividerType="DividerType.FullWidth" Style="border-width:3px"/>
@@ -12,4 +13,17 @@
     <MudNavLink Href="/list">
         <MudIcon Icon="@Icons.Material.Filled.FormatListBulleted" /> Lista PKD
     </MudNavLink>
+    <AuthorizeView Roles="@UserRoles.Admin">
+        <Authorized>
+            <MudNavLink Href="/Account/Register">
+                <MudIcon Icon="@Icons.Material.Filled.PersonAddAlt" /> Rejestracja
+            </MudNavLink>
+            <MudNavLink Href="/hangfire">
+                <MudIcon Icon="@Icons.Material.Filled.Whatshot" /> Hangfire
+            </MudNavLink>
+            <MudNavLink Href="/admin">
+                <MudIcon Icon="@Icons.Material.Filled.Settings" /> Panel administracyjny
+            </MudNavLink>
+        </Authorized>
+    </AuthorizeView>
 </MudNavMenu>

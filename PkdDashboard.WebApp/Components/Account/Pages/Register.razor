@@ -9,6 +9,8 @@
 
 @using PkdDashboard.WebApp.Data.Entities.Auth
 
+@attribute [Authorize(Roles = UserRoles.Admin)]
+
 @inject UserManager<ApplicationUser> UserManager
 @inject IUserStore<ApplicationUser> UserStore
 @inject SignInManager<ApplicationUser> SignInManager
@@ -43,6 +45,10 @@
                 <label for="Input.ConfirmPassword">Confirm Password</label>
                 <ValidationMessage For="() => Input.ConfirmPassword" class="text-danger" />
             </div>
+            <div class="form-check mb-3">
+                <InputCheckbox @bind-Value="Input.IsAdmin" id="Input.IsAdmin" class="form-check-input" />
+                <label class="form-check-label" for="Input.IsAdmin">Register as admin</label>
+            </div>
             <button type="submit" class="w-100 btn btn-lg btn-primary">Register</button>
         </EditForm>
     </div>
@@ -76,11 +82,33 @@
 
         Logger.LogInformation("User created a new account with password.");
 
+        // Assign default User role to new accounts
+        var roleResult = await UserManager.AddToRoleAsync(user, UserRoles.User);
+        if (!roleResult.Succeeded)
+        {
+            Logger.LogWarning("Failed to assign User role to new account: {Errors}", 
+                string.Join(", ", roleResult.Errors.Select(e => e.Description)));
+        }
+
+        if (Input.IsAdmin)
+        {
+            var adminRoleResult = await UserManager.AddToRoleAsync(user, UserRoles.Admin);
+            if (!adminRoleResult.Succeeded)
+            {
+                Logger.LogWarning("Failed to assign Admin role to new account: {Errors}",
+                    string.Join(", ", adminRoleResult.Errors.Select(e => e.Description)));
+            }
+        }
+
         if (UserManager.Options.SignIn.RequireConfirmedAccount)
         {
-            RedirectManager.RedirectTo(
-                "Account/RegisterConfirmation",
-                new() { ["email"] = Input.Email, ["returnUrl"] = ReturnUrl });
+            var token = await UserManager.GenerateEmailConfirmationTokenAsync(user);
+            var confirmResult = await UserManager.ConfirmEmailAsync(user, token);
+            if (!confirmResult.Succeeded)
+            {
+                identityErrors = confirmResult.Errors;
+                return;
+            }
         }
 
         await SignInManager.SignInAsync(user, isPersistent: false);
@@ -126,5 +154,9 @@
         [Display(Name = "Confirm password")]
         [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
         public string ConfirmPassword { get; set; } = "";
+
+
+        [Display(Name = "Register as admin")]
+        public bool IsAdmin { get; set; } = false;
     }
 }

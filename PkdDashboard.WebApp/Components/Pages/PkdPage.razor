@@ -1,8 +1,10 @@
 ﻿@page "/pkd/{Name?}"
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
 
 @rendermode InteractiveServer
 @attribute [Authorize]
 
+@inject NavigationManager Navigation
 @inject PkdService PkdService
 @inject CompanyCountService CompanyCountService
 
@@ -11,12 +13,12 @@
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="h-100">
     <MudPaper Elevation="2" Class="h-100 pa-2">
         <MudStack>
-            <MudAutocomplete T="PkdEntry" Class="medium-input" Value="@_selectedPkd" ValueChanged="OnSelectedPkdChanged" SearchFunc="SearchPkdAsync" ToStringFunc="pkd => pkd?.PkdString ?? string.Empty" Label="Kod PKD" SelectValueOnTab CoerceText ResetValueOnEmptyText />
+            <MudAutocomplete T="PkdEntry" Class="medium-input" Value="@_selectedPkd" ValueChanged="On_selectedPkdChanged" SearchFunc="SearchPkdAsync" ToStringFunc="pkd => pkd?.PkdString ?? string.Empty" Label="Kod PKD" SelectValueOnTab CoerceText ResetValueOnEmptyText />
             @if (_selectedPkd is not null)
             {
                 <MudText Typo="Typo.h6">@_selectedPkd.Description</MudText>
                 <MudDateRangePicker Class="large-input" DateRange="_dateRange" DateRangeChanged="OnDateRangeChanged" Label="Zakres dat" DateFormat="dddd, dd MMMM, yyyy" />
-                <MudChart ChartType="ChartType.Line" ChartSeries="_chartSeries" XAxisLabels="_chartLabels" ChartOptions="_chartOptions" />
+                <MudChart ChartType="ChartType.Line" ChartSeries="_chartSeries" XAxisLabels="_chartLabels" ChartOptions="_chartOptions" AxisChartOptions="_chartAxisOptions" />
             }
         </MudStack>
     </MudPaper>
@@ -26,6 +28,7 @@
 @code {
     private const InterpolationOption LowDataInterpolationOption = InterpolationOption.Straight;
     private const InterpolationOption DefaultInterpolationOption = InterpolationOption.NaturalSpline;
+    private const string LastPkdStorageKey = "lastPkd";
 
     [Parameter]
     public string? Name { get; set; }
@@ -37,6 +40,10 @@
     private DateTime _minAllowedDate = default!;
     private DateTime _maxAllowdDate = default!;
 
+    private AxisChartOptions _chartAxisOptions = new()
+    {
+        XAxisLabelRotation = 30,
+    };
     private ChartOptions _chartOptions = new()
     {
         InterpolationOption = LowDataInterpolationOption,
@@ -57,12 +64,11 @@
         _dateRange.Start = MathExtensions.Max(_minAllowedDate, DateTime.Today.AddMonths(-1));
         _dateRange.End = MathExtensions.Min(_maxAllowdDate, DateTime.Today);
 
-        if (Name is not null)
+        if (!string.IsNullOrEmpty(Name))
         {
             _selectedPkd = _allPkds.FirstOrDefault(pkd => pkd.PkdString == Name);
             await UpdateChartDataAsync(_selectedPkd, _dateRange);
         }
-
         base.OnInitialized();
     }
 
@@ -75,9 +81,14 @@
         return _allPkds.Where(pkd => pkd.PkdString.Contains(searchQuery, StringComparison.InvariantCultureIgnoreCase));
     }
 
-    private async Task OnSelectedPkdChanged(PkdEntry? value)
+    private async Task On_selectedPkdChanged(PkdEntry? value)
     {
         _selectedPkd = value;
+        if (_selectedPkd is null)
+            Navigation.NavigateTo("/pkd");
+        else
+            Navigation.NavigateTo($"/pkd/{_selectedPkd.PkdString}");
+
         await UpdateChartDataAsync(_selectedPkd, _dateRange);
     }
 
@@ -94,7 +105,7 @@
             : await CompanyCountService.GetCountsForPkdInDateRangeAsync(pkdEntry, DateOnly.FromDateTime(dateRange.Start.Value), DateOnly.FromDateTime(dateRange.End.Value));
 
         _chartSeries[0].Data = data.Select(cc => (double)cc.Count).ToArray();
-        _chartLabels = data.Select(cc => cc.Day.ToString("dd MMMM yyyy")).ToArray();
+        _chartLabels = data.Select(cc => cc.Day.ToString("dd.MM")).ToArray();
 
         _chartOptions.InterpolationOption = data.Count < 4
             ? LowDataInterpolationOption

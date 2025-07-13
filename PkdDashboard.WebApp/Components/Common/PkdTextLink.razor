@@ -1,0 +1,6 @@
+﻿<MudLink Href="@($"/pkd/{Text}")">@Text</MudLink>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Text { get; set; }
+}

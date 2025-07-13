@@ -1,0 +1,1 @@
+aspire publish -p docker-compose --project .\PkdDashboard.AppHost\PkdDashboard.AppHost.csproj -o docker

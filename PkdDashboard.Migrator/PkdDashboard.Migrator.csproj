@@ -8,7 +8,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Resources\pkd.csv" />
+    <Content Update="appsettings.json" CopyToPublishDirectory="Never" />
+  </ItemGroup>
+    
+  <ItemGroup>
     <None Remove="Resources\Seeding\AppDbContext\PkdEntry.tsv" />
   </ItemGroup>
 

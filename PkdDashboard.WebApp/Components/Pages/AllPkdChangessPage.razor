@@ -9,12 +9,12 @@
 <PageTitle>Dashboard</PageTitle>
 
 <MudContainer Class="h-100" MaxWidth="MaxWidth.ExtraLarge">
-    <MudPaper Elevation="2">
+    <MudPaper Elevation="2" Class="h-100">
         <MudStack>
             <MudStack Row Class="h-100 px-2">
-                <MudDatePicker @bind-Date="PreviousDay" IsDateDisabledFunc="x => !_availableDates.Contains(x)" Label="Poprzednia data" />
-                <MudDatePicker @bind-Date="CurrentDay" IsDateDisabledFunc="x => !_availableDates.Contains(x)" Label="Obecna data" />
-                <MudSpacer />
+                <MudDatePicker @bind-Date="PreviousDay" Class="medium-input" IsDateDisabledFunc="x => !_availableDates.Contains(x)" Label="Poprzednia data" />
+                <MudDatePicker @bind-Date="CurrentDay" Class="medium-input" IsDateDisabledFunc="x => !_availableDates.Contains(x)" Label="Obecna data" />
+                <MudSpacer/>
             </MudStack>
             <MudTable T="CompanyCountDiff" @ref="_table" Class="full-height-table" ServerData="ServerReload" Hover Dense>
                 <ToolBarContent>

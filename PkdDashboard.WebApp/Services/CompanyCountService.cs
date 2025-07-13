@@ -42,4 +42,16 @@ internal class CompanyCountService(IDbContextFactory<AppDbContext> contextFactor
 
         return new(items, count);
     }
+
+    public async Task<List<CompanyCount>> GetCountsForPkdInDateRangeAsync(PkdEntry pkd, DateOnly start, DateOnly end)
+    {
+        using var dbContext = _contextFactory.CreateDbContext();
+
+        return await dbContext.CompanyCounts
+            .Where(cc => cc.Day >= start && cc.Day <= end)
+            .Where(cc => cc.PkdEntryId == pkd.Id)
+            .OrderBy(cc => cc.Day)
+            .AsNoTracking()
+            .ToListAsync();
+    }
 }

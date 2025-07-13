@@ -1,7 +1,103 @@
-﻿@page "/pkd"
+﻿@page "/pkd/{Name?}"
 
-<h3>PkdPage</h3>
+@rendermode InteractiveServer
+@attribute [Authorize]
+
+@inject PkdService PkdService
+@inject CompanyCountService CompanyCountService
+
+<PageTitle>Szczegóły PKD</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="h-100">
+    <MudPaper Elevation="2" Class="h-100 pa-2">
+        <MudStack>
+            <MudAutocomplete T="PkdEntry" Class="medium-input" Value="@_selectedPkd" ValueChanged="OnSelectedPkdChanged" SearchFunc="SearchPkdAsync" ToStringFunc="pkd => pkd?.PkdString ?? string.Empty" Label="Kod PKD" SelectValueOnTab CoerceText ResetValueOnEmptyText />
+            @if (_selectedPkd is not null)
+            {
+                <MudText Typo="Typo.h6">@_selectedPkd.Description</MudText>
+                <MudDateRangePicker Class="large-input" DateRange="_dateRange" DateRangeChanged="OnDateRangeChanged" Label="Zakres dat" DateFormat="dddd, dd MMMM, yyyy" />
+                <MudChart ChartType="ChartType.Line" ChartSeries="_chartSeries" XAxisLabels="_chartLabels" ChartOptions="_chartOptions" />
+            }
+        </MudStack>
+    </MudPaper>
+</MudContainer>
+
 
 @code {
+    private const InterpolationOption LowDataInterpolationOption = InterpolationOption.Straight;
+    private const InterpolationOption DefaultInterpolationOption = InterpolationOption.NaturalSpline;
 
+    [Parameter]
+    public string? Name { get; set; }
+
+    private List<PkdEntry> _allPkds = [];
+    private PkdEntry? _selectedPkd;
+
+    private DateRange _dateRange { get; set; } = new();
+    private DateTime _minAllowedDate = default!;
+    private DateTime _maxAllowdDate = default!;
+
+    private ChartOptions _chartOptions = new()
+    {
+        InterpolationOption = LowDataInterpolationOption,
+        MaxNumYAxisTicks = 5,
+        ShowLegend = false,
+    };
+    private List<ChartSeries> _chartSeries = [new() { Data = [], ShowDataMarkers = true }];
+    private string[] _chartLabels = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        _allPkds = await PkdService.GetAllAsync();
+
+        var allowedDateRange = await CompanyCountService.GetAllDatesWithEntryAsync();
+        _minAllowedDate = allowedDateRange.Min();
+        _maxAllowdDate = allowedDateRange.Max();
+
+        _dateRange.Start = MathExtensions.Max(_minAllowedDate, DateTime.Today.AddMonths(-1));
+        _dateRange.End = MathExtensions.Min(_maxAllowdDate, DateTime.Today);
+
+        if (Name is not null)
+        {
+            _selectedPkd = _allPkds.FirstOrDefault(pkd => pkd.PkdString == Name);
+            await UpdateChartDataAsync(_selectedPkd, _dateRange);
+        }
+
+        base.OnInitialized();
+    }
+
+    // TODO: Try to make async
+    private async Task<IEnumerable<PkdEntry>> SearchPkdAsync(string searchQuery, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrEmpty(searchQuery))
+            return _allPkds;
+
+        return _allPkds.Where(pkd => pkd.PkdString.Contains(searchQuery, StringComparison.InvariantCultureIgnoreCase));
+    }
+
+    private async Task OnSelectedPkdChanged(PkdEntry? value)
+    {
+        _selectedPkd = value;
+        await UpdateChartDataAsync(_selectedPkd, _dateRange);
+    }
+
+    private async Task OnDateRangeChanged(DateRange value)
+    {
+        _dateRange = value;
+        await UpdateChartDataAsync(_selectedPkd!, _dateRange);
+    }
+
+    private async Task UpdateChartDataAsync(PkdEntry? pkdEntry, DateRange dateRange)
+    {
+        var data = pkdEntry is null || dateRange.Start is null || dateRange.End is null
+            ? []
+            : await CompanyCountService.GetCountsForPkdInDateRangeAsync(pkdEntry, DateOnly.FromDateTime(dateRange.Start.Value), DateOnly.FromDateTime(dateRange.End.Value));
+
+        _chartSeries[0].Data = data.Select(cc => (double)cc.Count).ToArray();
+        _chartLabels = data.Select(cc => cc.Day.ToString("dd MMMM yyyy")).ToArray();
+
+        _chartOptions.InterpolationOption = data.Count < 4
+            ? LowDataInterpolationOption
+            : DefaultInterpolationOption;
+    }
 }

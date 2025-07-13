@@ -10,6 +10,17 @@ internal class PkdService(IDbContextFactory<AppDbContext> contextFactory)
 {
     private readonly IDbContextFactory<AppDbContext> _contextFactory = contextFactory;
 
+    public async Task<List<PkdEntry>> GetAllAsync()
+    {
+        using var dbContext = _contextFactory.CreateDbContext();
+        return await dbContext.PkdEntries
+            .AsNoTracking()
+            .OrderBy(pkd => pkd.Division)
+            .ThenBy(pkd => pkd.Group)
+            .ThenBy(pkd => pkd.Class)
+            .ToListAsync();
+    }
+
     public async Task<PagedResult<PkdEntry>> GetListQueryAsync(PagerSearchQuery pagerSearchQuery)
     {
         using var dbContext = _contextFactory.CreateDbContext();

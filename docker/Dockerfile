@@ -1,0 +1,28 @@
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+WORKDIR /src
+
+# Copy the entire solution
+COPY . .
+RUN dotnet restore "PkdDashboard.AppHost/PkdDashboard.AppHost.csproj"
+
+# Build specific projects
+RUN dotnet publish "PkdDashboard.Migrator/PkdDashboard.Migrator.csproj" -c Release -o /app/migrator
+RUN dotnet publish "PkdDashboard.DataPollingService/PkdDashboard.DataPollingService.csproj" -c Release -o /app/datapolling
+RUN dotnet publish "PkdDashboard.WebApp/PkdDashboard.WebApp.csproj" -c Release -o /app/webapp
+
+# Runtime images
+# Migrator is referencing webapp, so it needs aspnet (transitive dependency)
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS migrator
+WORKDIR /app
+COPY --from=build /app/migrator .
+ENTRYPOINT ["dotnet", "PkdDashboard.Migrator.dll"]
+
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS datapollingservice
+WORKDIR /app
+COPY --from=build /app/datapolling .
+ENTRYPOINT ["dotnet", "PkdDashboard.DataPollingService.dll"]
+
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS webapp
+WORKDIR /app
+COPY --from=build /app/webapp .
+ENTRYPOINT ["dotnet", "PkdDashboard.WebApp.dll"]

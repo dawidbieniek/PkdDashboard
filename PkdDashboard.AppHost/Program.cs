@@ -45,16 +45,34 @@ postgre.PublishAsDockerComposeService((res, ser) =>
 });
 migrator.PublishAsDockerComposeService((res, ser) =>
 {
+    ser.Build = new()
+    {
+        Context = "..",
+        Dockerfile = "docker/Dockerfile",
+        Target = "migrator"
+    };
     ser.Networks = [DockerComposeConfig.Networks.PkdNetKey];
 });
 dataPolling.PublishAsDockerComposeService((res, ser) =>
 {
+    ser.Build = new()
+    {
+        Context = "..",
+        Dockerfile = "docker/Dockerfile",
+        Target = "datapollingservice"
+    };
     ser.Environment[DockerComposeConfig.Params.BizGovApiKey] = bizGovApiKeyParam.AsEnvironmentPlaceholder(res);
     ser.Networks = [DockerComposeConfig.Networks.PkdNetKey];
     ser.Ports = [];
 });
 webapp.PublishAsDockerComposeService((res, ser) =>
 {
+    ser.Build = new()
+    {
+        Context = "..",
+        Dockerfile = "docker/Dockerfile",
+        Target = "webapp"
+    };
     ser.Networks = [DockerComposeConfig.Networks.PkdNetKey, DockerComposeConfig.Networks.ProxyNetKey];
     ser.Ports = ["8006:8005"];
 });

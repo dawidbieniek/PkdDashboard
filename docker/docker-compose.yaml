@@ -37,10 +37,8 @@ services:
       ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
       HTTP_PORTS: "8001"
       ConnectionStrings__mainDatabase: "Host=postgresql;Port=5432;Username=postgres;Password=${POSTGRESQL_PASSWORD};Database=mainDatabase"
+      ASPNETCORE_URLS: "http://+:8001"
       BiznesGovKey: "${BIZNESGOVKEY}"
-    ports:
-      - "8002:8001"
-      - "8004:8003"
     depends_on:
       postgresql:
         condition: "service_started"
@@ -58,9 +56,9 @@ services:
       HTTP_PORTS: "8005"
       ConnectionStrings__mainDatabase: "Host=postgresql;Port=5432;Username=postgres;Password=${POSTGRESQL_PASSWORD};Database=mainDatabase"
       services__datapollingservice__http__0: "http://datapollingservice:8001"
+      ASPNETCORE_URLS: "http://+:8005"
     ports:
       - "8006:8005"
-      - "8008:8007"
     depends_on:
       postgresql:
         condition: "service_started"

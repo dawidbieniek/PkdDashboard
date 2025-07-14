@@ -14,7 +14,7 @@ internal static class JobEndpoints
         {
             jobManager.AddOrUpdate(IQueryCompanyCountsJob.JobId,
                 Job.FromExpression<IQueryCompanyCountsJob>(j => j.ExecuteAsync(cancellationToken)),
-                Cron.Daily(18),
+                Cron.Daily(8),  // Run the job at 10 ECT
                 new RecurringJobOptions()
                 {
                     TimeZone = TimeZoneInfo.Local

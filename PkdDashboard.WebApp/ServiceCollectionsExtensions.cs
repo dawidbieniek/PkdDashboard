@@ -2,6 +2,7 @@
 
 using PkdDashboard.Global;
 using PkdDashboard.Shared.Migrations;
+using PkdDashboard.WebApp;
 using PkdDashboard.WebApp.Data;
 using PkdDashboard.WebApp.Data.Abstract;
 using PkdDashboard.WebApp.Data.Seeding;
@@ -17,6 +18,9 @@ public static class ServiceCollectionsExtensions
     {
         services.AddScoped<PkdService>();
         services.AddScoped<CompanyCountService>();
+        services.AddScoped<HangfireService>();
+
+        services.AddAppHttpClients();
 
         return services;
     }
@@ -70,5 +74,15 @@ public static class ServiceCollectionsExtensions
         {
             options.CommandTimeout = 15;
         });
+    }
+
+    private static IServiceCollection AddAppHttpClients(this IServiceCollection services)
+    {
+        services.AddHttpClient(HttpClientKeys.HangfireClientKey, options =>
+        {
+            options.BaseAddress = new Uri($"http://{ServiceKeys.DataPollingService}"); ;
+        });
+
+        return services;
     }
 }

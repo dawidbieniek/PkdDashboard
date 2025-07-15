@@ -1,5 +1,3 @@
-using Aspire.Hosting;
-
 using PkdDashboard.AppHost;
 using PkdDashboard.Global;
 
@@ -29,6 +27,7 @@ var webapp = builder.AddProject<Projects.PkdDashboard_WebApp>(ServiceKeys.WebApp
 builder.AddDockerComposeEnvironment(DockerComposeConfig.ComposeEnvironmentName)
     .ConfigureComposeFile(compose =>
     {
+        compose.Name = "pkd-dashboard";
         compose.Networks = new()
         {
             [DockerComposeConfig.Networks.ProxyNetKey] = DockerComposeConfig.Networks.ProxyNet,

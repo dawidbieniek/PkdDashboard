@@ -1,4 +1,5 @@
-﻿using PkdDashboard.Shared.DateUtil;
+﻿using PkdDashboard.DataPollingService.Jobs.QueryCompanyCounts.Exceptions;
+using PkdDashboard.Shared.DateUtil;
 
 namespace PkdDashboard.DataPollingService.Jobs.QueryCompanyCounts;
 
@@ -27,32 +28,37 @@ internal class QueryCompanyCountsJob(ILogger<QueryCompanyCountsJob> logger, Data
             pkdsForQuery = [.. pkdsForQuery.Take(1000)];
         }
 
-        _logger.LogInformation("Querying company counts for {count} PKDs in {batchCount} batches of size {batchSize}", pkdsForQuery.Count, (pkdsForQuery.Count / BatchSize) + 1, BatchSize);
+        var numberOfBatches = (pkdsForQuery.Count / BatchSize) + 1;
+        _logger.LogInformation("Querying company counts for {count} PKDs in {batchCount} batches of size {batchSize}", pkdsForQuery.Count, numberOfBatches, BatchSize);
 
-        for (int i = 0; i < pkdsForQuery.Count; i += BatchSize)
+        try
         {
-            var batch = pkdsForQuery.Skip(i).Take(BatchSize).ToList();
-            _logger.LogInformation("Processing batch {batchIndex} with {batchSize} PKDs", i / BatchSize + 1, batch.Count);
-
-            var counts = (await _httpService.RequestBatchOfNumberOfCompaniesInPkdAsync([.. batch.Select(pkd => pkd.ToQueryString())], cancellationToken)).ToList();
-
-            for (int j = i; j < i + batch.Count && j < pkdsForQuery.Count; j++)
+            for (int i = 0; i < pkdsForQuery.Count; i += BatchSize)
             {
-                var pkd = pkdsForQuery[j];
-                int? count = counts[j - i];
-                if (count is null)
+                var batch = pkdsForQuery.Skip(i).Take(BatchSize).ToList();
+                _logger.LogInformation("Processing batch {batchIndex}/{batchCount} with {batchSize} PKDs", (i / BatchSize) + 1, numberOfBatches, batch.Count);
+
+                var counts = (await _httpService.RequestBatchOfNumberOfCompaniesInPkdAsync([.. batch.Select(pkd => pkd.ToQueryString())], cancellationToken)).ToList();
+
+                for (int j = i; j < i + batch.Count && j < pkdsForQuery.Count; j++)
                 {
-                    _logger.LogError("Failed to retrieve company count for PKD: {pkd}", pkd.ToQueryString());
-                    continue;
+                    var pkd = pkdsForQuery[j];
+                    int count = counts[j - i];
+                    _logger.LogDebug("PKD: {pkd}, Count: {count}", pkd.ToQueryString(), count);
+                    await _databaseService.SaveCompanyCountAsync(today, pkd, count, cancellationToken);
                 }
-                _logger.LogDebug("PKD: {pkd}, Count: {count}", pkd.ToQueryString(), count);
-                await _databaseService.SaveCompanyCountAsync(today, pkd, count.Value, cancellationToken);
+
+                _logger.LogInformation("Batch {batchIndex}/{batchCount} processed. Sleeping for {delay} ms", (i / BatchSize) + 1, numberOfBatches, BatchDelayMs);
+                await Task.Delay(BatchDelayMs, cancellationToken);
             }
 
-            _logger.LogInformation("Batch {batchIndex} processed. Sleeping for {delay} ms", i / BatchSize + 1, BatchDelayMs);
-            await Task.Delay(BatchDelayMs, cancellationToken);
+            _logger.LogInformation("Company count query completed for {date}", today);
         }
-
-        _logger.LogInformation("Company count query completed for {date}", today);
+        catch (HttpApiErrorException ex)
+        {
+            _logger.LogCritical("Failed to fetch all counts: '{message}. Last updated pkd: {lastUpdated}'", ex.Message, ex.LastUpdatedPkd);
+            // TODO: Save last correct id and queue retry in at least an hour
+            return;
+        }
     }
 }

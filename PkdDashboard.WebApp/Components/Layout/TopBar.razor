@@ -7,7 +7,13 @@
     <MudSpacer/>
     <AuthorizeView>
         <Authorized>
-            <MudText Typo="Typo.body1" Class="my-auto">@context.User.Identity?.Name</MudText>
+            <MudText Typo="Typo.body1" Class="my-auto">
+                @{
+                    var fullEmail = context.User.Identity?.Name;
+                    var username = fullEmail?.Split('@')[0];
+                }
+                @(username ?? "???")
+            </MudText>
             <form method="post" action="Account/Logout">
                 <AntiforgeryToken />
                 <input type="hidden" name="ReturnUrl" value="@_currentUrl" />

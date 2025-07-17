@@ -29,9 +29,4 @@ internal static class DockerComposeConfig
     {
         public const string DatabaseVolumeKey = "pgdata";
     }
-
-    public static class Params
-    {
-        public const string BizGovApiKey = "BiznesGovKey";
-    }
 }

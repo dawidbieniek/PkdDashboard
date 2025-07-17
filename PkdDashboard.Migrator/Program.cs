@@ -1,4 +1,5 @@
 using PkdDashboard.Migrator;
+using PkdDashboard.Shared.Configuration;
 
 var builder = Host.CreateApplicationBuilder(args);
 
@@ -11,4 +12,7 @@ builder.Services.AddOpenTelemetry()
     .WithTracing(tracing => tracing.AddSource(Worker.ActivitySourceName));
 
 var host = builder.Build();
+
+LocalizationUtil.SetDefaultCulture();
+
 host.Run();

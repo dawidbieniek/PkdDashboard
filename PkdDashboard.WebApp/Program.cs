@@ -1,14 +1,32 @@
 using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 
 using MudBlazor.Services;
 
+using PkdDashboard.Global;
+using PkdDashboard.Shared.Configuration;
 using PkdDashboard.WebApp.Components;
 using PkdDashboard.WebApp.Components.Account;
 using PkdDashboard.WebApp.Data;
 using PkdDashboard.WebApp.Data.Entities.Auth;
 
+using System.Net;
+
 var builder = WebApplication.CreateBuilder(args);
+
+var proxyGatewayIpString = builder.Configuration[EnvironmentParamsKeys.ProxyGatewayIpKey]
+    ?? throw new NullReferenceException("No proxy gateway IP - check your configuration");
+if(!IPAddress.TryParse(proxyGatewayIpString, out var proxyGatewayIp))
+    throw new FormatException($"Invalid IP address format for {EnvironmentParamsKeys.ProxyGatewayIpKey}: {proxyGatewayIpString}");
+
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+    options.KnownProxies.Add(proxyGatewayIp);
+});
 
 builder.AddServiceDefaults();
 builder.AddWebAppDataServices();
@@ -30,6 +48,12 @@ builder.Services.AddAuthentication(options =>
 })
     .AddIdentityCookies();
 
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    options.Cookie.SameSite = SameSiteMode.Lax;
+});
+
 builder.Services.AddAntiforgery();
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
@@ -43,6 +67,10 @@ builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.Requ
 builder.Services.AddMudServices();
 
 var app = builder.Build();
+
+LocalizationUtil.SetDefaultCulture();
+
+app.UseForwardedHeaders();
 
 app.MapDefaultEndpoints();
 

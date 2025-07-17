@@ -14,14 +14,12 @@ var migrator = builder.AddProject<Projects.PkdDashboard_Migrator>(ServiceKeys.Mi
 
 var dataPolling = builder.AddProject<Projects.PkdDashboard_DataPollingService>(ServiceKeys.DataPollingService)
     .WithReference(database).WaitFor(database)
-    .WithEnvironment("ASPNETCORE_URLS", "http://+:8001")
     .WaitForCompletion(migrator);
 
 var webapp = builder.AddProject<Projects.PkdDashboard_WebApp>(ServiceKeys.WebApp)
     .WithReference(database).WaitFor(database)
     .WithReference(dataPolling)
-    .WaitForCompletion(migrator)
-    .WithEnvironment("ASPNETCORE_URLS", "http://+:8005");
+    .WaitForCompletion(migrator);
 
 // Configure docker compose generation
 builder.AddDockerComposeEnvironment(DockerComposeConfig.ComposeEnvironmentName)
@@ -35,12 +33,13 @@ builder.AddDockerComposeEnvironment(DockerComposeConfig.ComposeEnvironmentName)
         };
     });
 
-var bizGovApiKeyParam = builder.AddParameter(DockerComposeConfig.Params.BizGovApiKey, secret: true);
+var bizGovApiKeyParam = builder.AddParameter(EnvironmentParamsKeys.BizGovApiKey, secret: true);
+var proxyGatewayParam = builder.AddParameter(EnvironmentParamsKeys.ProxyGatewayIpKey, secret: true);
 
 postgre.PublishAsDockerComposeService((res, ser) =>
 {
     ser.Networks = [DockerComposeConfig.Networks.PkdNetKey, DockerComposeConfig.Networks.ProxyNetKey];
-    ser.Ports = ["8000:5432"];
+    ser.Ports = [];
 });
 migrator.PublishAsDockerComposeService((res, ser) =>
 {
@@ -48,9 +47,10 @@ migrator.PublishAsDockerComposeService((res, ser) =>
     {
         Context = "..",
         Dockerfile = "docker/Dockerfile",
-        Target = "migrator"
+        Target = "pkd-migrator"
     };
     ser.Networks = [DockerComposeConfig.Networks.PkdNetKey];
+    ser.Environment["TZ"] = "Europe/Warsaw";
 });
 dataPolling.PublishAsDockerComposeService((res, ser) =>
 {
@@ -58,11 +58,13 @@ dataPolling.PublishAsDockerComposeService((res, ser) =>
     {
         Context = "..",
         Dockerfile = "docker/Dockerfile",
-        Target = "datapollingservice"
+        Target = "pkd-datapollingservice"
     };
-    ser.Environment[DockerComposeConfig.Params.BizGovApiKey] = bizGovApiKeyParam.AsEnvironmentPlaceholder(res);
-    ser.Networks = [DockerComposeConfig.Networks.PkdNetKey];
-    ser.Ports = [];
+    ser.Networks = [DockerComposeConfig.Networks.PkdNetKey, DockerComposeConfig.Networks.ProxyNetKey];  // HACK: Temporarly expose in proxy network
+    ser.Restart = "unless-stopped";
+    ser.Environment[EnvironmentParamsKeys.BizGovApiKey] = proxyGatewayParam.AsEnvironmentPlaceholder(res);
+    ser.Environment[EnvironmentParamsKeys.ProxyGatewayIpKey] = proxyGatewayParam.AsEnvironmentPlaceholder(res); // HACK: Temporarly expose in proxy network
+    ser.Environment["TZ"] = "Europe/Warsaw";
 });
 webapp.PublishAsDockerComposeService((res, ser) =>
 {
@@ -70,10 +72,12 @@ webapp.PublishAsDockerComposeService((res, ser) =>
     {
         Context = "..",
         Dockerfile = "docker/Dockerfile",
-        Target = "webapp"
+        Target = "pkd-dashboard"
     };
     ser.Networks = [DockerComposeConfig.Networks.PkdNetKey, DockerComposeConfig.Networks.ProxyNetKey];
-    ser.Ports = ["8006:8005"];
+    ser.Restart = "unless-stopped";
+    ser.Environment[EnvironmentParamsKeys.ProxyGatewayIpKey] = proxyGatewayParam.AsEnvironmentPlaceholder(res);
+    ser.Environment["TZ"] = "Europe/Warsaw";
 });
 
 builder.Build().Run();

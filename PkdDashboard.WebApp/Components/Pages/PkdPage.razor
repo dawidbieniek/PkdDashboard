@@ -17,7 +17,7 @@
             @if (_selectedPkd is not null)
             {
                 <MudText Typo="Typo.h6">@_selectedPkd.Description</MudText>
-                <MudDateRangePicker Class="large-input" DateRange="_dateRange" DateRangeChanged="OnDateRangeChanged" Label="Zakres dat" DateFormat="dddd, dd MMMM, yyyy" />
+                <MudDateRangePicker Class="large-input" DateRange="_dateRange" DateRangeChanged="OnDateRangeChanged" MinDate="_minAllowedDate" MaxDate="_maxAllowdDate" Label="Zakres dat" DateFormat="dddd, dd MMMM, yyyy" />
                 <MudChart ChartType="ChartType.Line" ChartSeries="_chartSeries" XAxisLabels="_chartLabels" ChartOptions="_chartOptions" AxisChartOptions="_chartAxisOptions" />
             }
         </MudStack>

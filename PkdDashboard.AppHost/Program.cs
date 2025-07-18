@@ -20,6 +20,9 @@ var webapp = builder.AddProject<Projects.PkdDashboard_WebApp>(ServiceKeys.WebApp
     .WithReference(dataPolling)
     .WaitForCompletion(migrator);
 
+// Reference for trusted proxy
+dataPolling.WithReference(webapp);
+
 // Configure docker compose generation
 builder.AddDockerComposeEnvironment(DockerComposeConfig.ComposeEnvironmentName)
     .ConfigureComposeFile(compose =>

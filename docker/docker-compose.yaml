@@ -48,6 +48,7 @@ services:
       ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
       HTTP_PORTS: "8001"
       ConnectionStrings__mainDatabase: "Host=pkd-postgresql;Port=5432;Username=postgres;Password=${PKD_POSTGRESQL_PASSWORD};Database=mainDatabase"
+      services__pkd-dashboard__http__0: "http://pkd-dashboard:8005"
       BiznesGovKey: "${BIZNESGOVKEY}"
       TZ: "Europe/Warsaw"
     ports:

@@ -7,6 +7,8 @@ services:
       POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256 --auth-local=scram-sha-256"
       POSTGRES_USER: "postgres"
       POSTGRES_PASSWORD: "${PKD_POSTGRESQL_PASSWORD}"
+    ports:
+      - "8000:5432"
     volumes:
       - type: "volume"
         target: "/var/lib/postgresql/data"
@@ -15,6 +17,7 @@ services:
     networks:
       - "pkd-net"
       - "proxy-net"
+    restart: "unless-stopped"
   pkd-migrator:
     image: "${PKD_MIGRATOR_IMAGE}"
     build:
@@ -32,7 +35,6 @@ services:
         condition: "service_started"
     networks:
       - "pkd-net"
-    restart: "unless-stopped"
   pkd-datapollingservice:
     image: "${PKD_DATAPOLLINGSERVICE_IMAGE}"
     build:

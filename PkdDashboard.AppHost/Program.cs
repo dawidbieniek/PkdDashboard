@@ -37,7 +37,7 @@ var bizGovApiKeyParam = builder.AddParameter(EnvironmentParamsKeys.BizGovApiKey,
 postgre.PublishAsDockerComposeService((res, ser) =>
 {
     ser.Networks = [DockerComposeConfig.Networks.PkdNetKey, DockerComposeConfig.Networks.ProxyNetKey];
-    ser.Ports = [];
+    ser.Restart = "unless-stopped";
 });
 migrator.PublishAsDockerComposeService((res, ser) =>
 {
@@ -48,7 +48,6 @@ migrator.PublishAsDockerComposeService((res, ser) =>
         Target = "pkd-migrator"
     };
     ser.Networks = [DockerComposeConfig.Networks.PkdNetKey]; 
-    ser.Restart = "unless-stopped";
     ser.Environment["TZ"] = "Europe/Warsaw";
 });
 dataPolling.PublishAsDockerComposeService((res, ser) =>

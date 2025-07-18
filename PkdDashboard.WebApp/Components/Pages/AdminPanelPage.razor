@@ -29,45 +29,43 @@
         <MudButton Color="Color.Warning" OnClick="StopJob" Disabled="_loadingStatus || !_status">Stop</MudButton>
         <MudSpacer />
         <MudCheckBox @bind-Value="_allowForce" Label="Allow forcing" />
-        <MudButton Color="Color.Error" OnClick="HangfireService.TriggerJobAsync" Disabled="!_allowForce">Force</MudButton>
+        <MudButton Color="Color.Error" OnClick="ForceJob" Disabled="!_allowForce">Force</MudButton>
     </MudStack>
 </MudStack>
 
-@if (!string.IsNullOrEmpty(_hangfireDashboardUrl))
-{
-    <iframe src="@_hangfireDashboardUrl" style="height:600px" />
-}
+<iframe src="/hangfire" style="height:600px" />
 
 @code {
-    private string? _hangfireDashboardUrl;
     private bool _loadingStatus = true;
     private bool _status;
 
     private bool _allowForce = false;
-
-    protected override void OnInitialized()
-    {
-        var hangfireAppUrl = ServiceDiscoveryUtil.GetServiceEndpoint(ServiceKeys.DataPollingService, "http");
-        _hangfireDashboardUrl = hangfireAppUrl + "/hangfire";
-    }
 
     protected override async Task OnInitializedAsync()
     {
         await UpdateJobStatus();
     }
 
+    private async Task ForceJob()
+    {
+        await HangfireService.TriggerJobAsync();
+        _allowForce = false;
+    }
+
     private async Task StartJob()
     {
         await HangfireService.ScheduleJobAsync();
-        _loadingStatus = true;
-        StateHasChanged();
-        await Task.Delay(2000);
-        await UpdateJobStatus();
+        await UpdateStatusAfterDelay();
     }
 
     private async Task StopJob()
     {
         await HangfireService.UnScheduleJobAsync();
+        await UpdateStatusAfterDelay();
+    }
+
+    private async Task UpdateStatusAfterDelay()
+    {
         _loadingStatus = true;
         StateHasChanged();
         await Task.Delay(2000);
@@ -76,6 +74,8 @@
 
     private async Task UpdateJobStatus()
     {
+        _loadingStatus = true;
+        StateHasChanged();
         _status = await HangfireService.IsJobScheduledAsync();
         _loadingStatus = false;
     }

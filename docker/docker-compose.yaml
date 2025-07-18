@@ -46,7 +46,7 @@ services:
       ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
       HTTP_PORTS: "8001"
       ConnectionStrings__mainDatabase: "Host=pkd-postgresql;Port=5432;Username=postgres;Password=${PKD_POSTGRESQL_PASSWORD};Database=mainDatabase"
-      BiznesGovKey: "${PROXYGATEWAYIP}"
+      BiznesGovKey: "${BIZNESGOVKEY}"
       TZ: "Europe/Warsaw"
     ports:
       - "8002:8001"
@@ -73,7 +73,6 @@ services:
       HTTP_PORTS: "8005"
       ConnectionStrings__mainDatabase: "Host=pkd-postgresql;Port=5432;Username=postgres;Password=${PKD_POSTGRESQL_PASSWORD};Database=mainDatabase"
       services__pkd-datapollingservice__http__0: "http://pkd-datapollingservice:8001"
-      ProxyGatewayIp: "${PROXYGATEWAYIP}"
       TZ: "Europe/Warsaw"
     ports:
       - "8006:8005"

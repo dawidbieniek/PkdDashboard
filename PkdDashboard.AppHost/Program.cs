@@ -33,7 +33,6 @@ builder.AddDockerComposeEnvironment(DockerComposeConfig.ComposeEnvironmentName)
     });
 
 var bizGovApiKeyParam = builder.AddParameter(EnvironmentParamsKeys.BizGovApiKey, secret: true);
-var proxyGatewayParam = builder.AddParameter(EnvironmentParamsKeys.ProxyGatewayIpKey, secret: true);
 
 postgre.PublishAsDockerComposeService((res, ser) =>
 {
@@ -62,7 +61,7 @@ dataPolling.PublishAsDockerComposeService((res, ser) =>
     };
     ser.Networks = [DockerComposeConfig.Networks.PkdNetKey];
     ser.Restart = "unless-stopped";
-    ser.Environment[EnvironmentParamsKeys.BizGovApiKey] = proxyGatewayParam.AsEnvironmentPlaceholder(res);
+    ser.Environment[EnvironmentParamsKeys.BizGovApiKey] = bizGovApiKeyParam.AsEnvironmentPlaceholder(res);
     ser.Environment["TZ"] = "Europe/Warsaw";
 });
 webapp.PublishAsDockerComposeService((res, ser) =>
@@ -75,7 +74,6 @@ webapp.PublishAsDockerComposeService((res, ser) =>
     };
     ser.Networks = [DockerComposeConfig.Networks.PkdNetKey, DockerComposeConfig.Networks.ProxyNetKey];
     ser.Restart = "unless-stopped";
-    ser.Environment[EnvironmentParamsKeys.ProxyGatewayIpKey] = proxyGatewayParam.AsEnvironmentPlaceholder(res);
     ser.Environment["TZ"] = "Europe/Warsaw";
 });
 

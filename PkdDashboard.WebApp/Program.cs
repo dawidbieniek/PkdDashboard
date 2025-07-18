@@ -13,20 +13,32 @@ using PkdDashboard.WebApp.Data.Entities.Auth;
 
 using System.Net;
 
+using Yarp.ReverseProxy.Configuration;
+using Yarp.ReverseProxy.Transforms;
+
 var builder = WebApplication.CreateBuilder(args);
 
-var proxyGatewayIpString = builder.Configuration[EnvironmentParamsKeys.ProxyGatewayIpKey]
-    ?? throw new NullReferenceException("No proxy gateway IP - check your configuration");
-if(!IPAddress.TryParse(proxyGatewayIpString, out var proxyGatewayIp))
-    throw new FormatException($"Invalid IP address format for {EnvironmentParamsKeys.ProxyGatewayIpKey}: {proxyGatewayIpString}");
-
-builder.Services.Configure<ForwardedHeadersOptions>(options =>
-{
-    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
-    options.KnownNetworks.Clear();
-    options.KnownProxies.Clear();
-    options.KnownProxies.Add(proxyGatewayIp);
-});
+builder.Services.AddReverseProxy()
+    .LoadFromMemory(
+    [
+        new RouteConfig
+        {
+            RouteId = "hangfire",
+            ClusterId = "hangfire-cluster",
+            Match = new RouteMatch { Path = "/hangfire/{**catch-all}" }
+        }
+    ],
+    [
+        new ClusterConfig
+        {
+            ClusterId = "hangfire-cluster",
+            Destinations = new Dictionary<string, DestinationConfig>
+            {
+                { "hangfire-destination", new DestinationConfig { Address = ServiceDiscoveryUtil.GetServiceEndpoint(ServiceKeys.DataPollingService, "http") } }
+            }
+        }
+    ])
+    .AddTransforms(t => t.AddXForwarded());
 
 builder.AddServiceDefaults();
 builder.AddWebAppDataServices();
@@ -71,8 +83,18 @@ var app = builder.Build();
 LocalizationUtil.SetDefaultCulture();
 
 app.UseForwardedHeaders();
+app.UseExceptionHandler("/Error", createScopeForErrors: true);
+app.UseRouting();
+app.UseAuthentication();
+app.UseAuthorization();
+app.UseAntiforgery();
 
+app.MapReverseProxy();
 app.MapDefaultEndpoints();
+app.MapStaticAssets();
+app.MapRazorComponents<App>()
+    .AddInteractiveServerRenderMode();
+app.MapAdditionalIdentityEndpoints();
 
 // Seed roles
 using (var scope = app.Services.CreateScope())
@@ -80,25 +102,6 @@ using (var scope = app.Services.CreateScope())
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
     await SeedRolesAsync(roleManager);
 }
-
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseMigrationsEndPoint();
-}
-else
-{
-    app.UseExceptionHandler("/Error", createScopeForErrors: true);
-}
-
-app.UseAntiforgery();
-
-app.MapStaticAssets();
-app.MapRazorComponents<App>()
-    .AddInteractiveServerRenderMode();
-
-// Add additional endpoints required by the Identity /Account Razor components.
-app.MapAdditionalIdentityEndpoints();
 
 app.Run();
 

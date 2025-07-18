@@ -5,8 +5,7 @@ var builder = DistributedApplication.CreateBuilder(args);
 
 var postgre = builder.AddPostgres(ServiceKeys.PostgreSql)
     .WithPgAdmin()
-    .WithDataVolume(DockerComposeConfig.Volumes.DatabaseVolumeKey)
-    .WithLifetime(ContainerLifetime.Persistent);
+    .WithDataVolume(DockerComposeConfig.Volumes.DatabaseVolumeKey);
 var database = postgre.AddDatabase(ServiceKeys.Database);
 
 var migrator = builder.AddProject<Projects.PkdDashboard_Migrator>(ServiceKeys.Migrator)
@@ -49,7 +48,8 @@ migrator.PublishAsDockerComposeService((res, ser) =>
         Dockerfile = "docker/Dockerfile",
         Target = "pkd-migrator"
     };
-    ser.Networks = [DockerComposeConfig.Networks.PkdNetKey];
+    ser.Networks = [DockerComposeConfig.Networks.PkdNetKey]; 
+    ser.Restart = "unless-stopped";
     ser.Environment["TZ"] = "Europe/Warsaw";
 });
 dataPolling.PublishAsDockerComposeService((res, ser) =>
@@ -60,10 +60,9 @@ dataPolling.PublishAsDockerComposeService((res, ser) =>
         Dockerfile = "docker/Dockerfile",
         Target = "pkd-datapollingservice"
     };
-    ser.Networks = [DockerComposeConfig.Networks.PkdNetKey, DockerComposeConfig.Networks.ProxyNetKey];  // HACK: Temporarly expose in proxy network
+    ser.Networks = [DockerComposeConfig.Networks.PkdNetKey];
     ser.Restart = "unless-stopped";
     ser.Environment[EnvironmentParamsKeys.BizGovApiKey] = proxyGatewayParam.AsEnvironmentPlaceholder(res);
-    ser.Environment[EnvironmentParamsKeys.ProxyGatewayIpKey] = proxyGatewayParam.AsEnvironmentPlaceholder(res); // HACK: Temporarly expose in proxy network
     ser.Environment["TZ"] = "Europe/Warsaw";
 });
 webapp.PublishAsDockerComposeService((res, ser) =>

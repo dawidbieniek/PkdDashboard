@@ -32,6 +32,7 @@ services:
         condition: "service_started"
     networks:
       - "pkd-net"
+    restart: "unless-stopped"
   pkd-datapollingservice:
     image: "${PKD_DATAPOLLINGSERVICE_IMAGE}"
     build:
@@ -46,7 +47,6 @@ services:
       HTTP_PORTS: "8001"
       ConnectionStrings__mainDatabase: "Host=pkd-postgresql;Port=5432;Username=postgres;Password=${PKD_POSTGRESQL_PASSWORD};Database=mainDatabase"
       BiznesGovKey: "${PROXYGATEWAYIP}"
-      ProxyGatewayIp: "${PROXYGATEWAYIP}"
       TZ: "Europe/Warsaw"
     ports:
       - "8002:8001"
@@ -58,7 +58,6 @@ services:
         condition: "service_completed_successfully"
     networks:
       - "pkd-net"
-      - "proxy-net"
     restart: "unless-stopped"
   pkd-dashboard:
     image: "${PKD_DASHBOARD_IMAGE}"

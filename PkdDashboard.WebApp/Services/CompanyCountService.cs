@@ -16,6 +16,7 @@ internal class CompanyCountService(IDbContextFactory<AppDbContext> contextFactor
         var distinctDays = await dbContext.CompanyCounts
             .Select(cc => cc.Day)
             .Distinct()
+            .OrderBy(cc => cc.Day)
             .ToListAsync();
 
         // Converting to DateTime in memory, because SQL won't do this

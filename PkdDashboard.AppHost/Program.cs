@@ -13,8 +13,10 @@ var migrator = builder.AddProject<Projects.PkdDashboard_Migrator>(ServiceKeys.Mi
 
 var webapp = builder.AddProject<Projects.PkdDashboard_WebApp>(ServiceKeys.WebApp)
     .WithReference(database).WaitFor(database)
-    .WaitForCompletion(migrator)
-    .WithEnvironment("ASPNETCORE_URLS", "http://+:8005");
+    .WaitForCompletion(migrator);
+#if !DEBUG
+    webapp.WithEnvironment("ASPNETCORE_URLS", "http://+:8005");
+#endif
 
 // Configure docker compose generation
 builder.AddDockerComposeEnvironment(DockerComposeConfig.ComposeEnvironmentName)
@@ -45,7 +47,7 @@ migrator.PublishAsDockerComposeService((res, ser) =>
         Target = "pkd-migrator"
     };
     ser.Ports = [];
-    ser.Networks = [DockerComposeConfig.Networks.PkdNetKey]; 
+    ser.Networks = [DockerComposeConfig.Networks.PkdNetKey];
     ser.Environment["TZ"] = "Europe/Warsaw";
 });
 webapp.PublishAsDockerComposeService((res, ser) =>

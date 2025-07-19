@@ -15,8 +15,20 @@
             <MudStack Row Class="h-100 px-2">
                 <MudDatePicker @bind-Date="PreviousDay" Class="medium-input" IsDateDisabledFunc="x => !_availableDates.Contains(x)" Label="Poprzednia data" />
                 <MudDatePicker @bind-Date="CurrentDay" Class="medium-input" IsDateDisabledFunc="x => !_availableDates.Contains(x)" Label="Obecna data" />
-                <MudSpacer/>
+                <MudSpacer />
             </MudStack>
+            @if (_mismatchedCountsCount)
+            {
+                <MudAlert Severity="Severity.Warning" Class="mt-2">
+                    <MudText Typo="Typo.body1">
+                        Liczba wpisów na dzień <strong>@CurrentDay?.ToString("yyyy-MM-dd")</strong> i <strong>@PreviousDay?.ToString("yyyy-MM-dd")</strong> nie jest taka sama.
+                    </MudText>
+                    <br />
+                    <MudText Typo="Typo.body2">
+                        Może to oznaczać, że nie wszystkie dane zostały pobrane.
+                    </MudText>
+                </MudAlert>
+            }
             <MudTable T="CompanyCountDiff" @ref="_table" Class="full-height-table" ServerData="ServerReload" Hover Dense>
                 <ToolBarContent>
                     <MudText Typo="Typo.h6">Zmiany liczby firm</MudText>
@@ -36,7 +48,7 @@
                     <MudTh>Różnica</MudTh>
                 </HeaderContent>
                 <RowTemplate>
-                    <MudTd DataLabel="Pkd"><PkdTextLink Text="@context.PkdString"/></MudTd>
+                    <MudTd DataLabel="Pkd"><PkdTextLink Text="@context.PkdString" /></MudTd>
                     <MudTd DataLabel="Previous">@context.PreviousCount</MudTd>
                     <MudTd DataLabel="Current">@context.CurrentCount</MudTd>
                     <MudTd DataLabel="Difference">
@@ -54,6 +66,7 @@
 @code {
     private MudTable<CompanyCountDiff> _table = default!;
     private string _searchQuery = string.Empty;
+    private bool _mismatchedCountsCount = false;
 
     private DateTime? CurrentDay
     {
@@ -66,7 +79,7 @@
             field = value;
             _table.ReloadServerData();
         }
-    } = DateUtil.TodayDateTime;
+    }
     private DateTime? PreviousDay
     {
         get;
@@ -78,13 +91,18 @@
             field = value;
             _table.ReloadServerData();
         }
-    } = DateUtil.TodayDateTime.AddDays(-1);
+    }
 
     private List<DateTime> _availableDates = [];
 
     protected override async Task OnInitializedAsync()
     {
         _availableDates = await CompanyCountService.GetAllDatesWithEntryAsync();
+
+        if (_availableDates.Count > 0)
+            CurrentDay = MathExtensions.Min(DateUtil.TodayDateTime, _availableDates.Last());
+        if (_availableDates.Count > 1)
+            PreviousDay = MathExtensions.Min(DateUtil.TodayDateTime.AddDays(-1), _availableDates[^2]);
     }
 
     private async Task<TableData<CompanyCountDiff>> ServerReload(TableState state, CancellationToken token)
@@ -98,6 +116,8 @@
         var previousCounts = (await CompanyCountService.GetListQueryAsync(previousDay, new(PagerQuery.All, _searchQuery)))
             .Items
             .ToDictionary(cc => cc.PkdEntry, cc => cc);
+
+        _mismatchedCountsCount = todayCounts.Count != previousCounts.Count;
 
         var allPkds = todayCounts.Keys.ToHashSet();
         allPkds.Union(previousCounts.Keys.ToHashSet());

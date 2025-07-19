@@ -11,17 +11,9 @@ var database = postgre.AddDatabase(ServiceKeys.Database);
 var migrator = builder.AddProject<Projects.PkdDashboard_Migrator>(ServiceKeys.Migrator)
     .WithReference(database).WaitFor(database);
 
-var dataPolling = builder.AddProject<Projects.PkdDashboard_DataPollingService>(ServiceKeys.DataPollingService)
-    .WithReference(database).WaitFor(database)
-    .WaitForCompletion(migrator);
-
 var webapp = builder.AddProject<Projects.PkdDashboard_WebApp>(ServiceKeys.WebApp)
     .WithReference(database).WaitFor(database)
-    .WithReference(dataPolling)
     .WaitForCompletion(migrator);
-
-// Reference for trusted proxy
-dataPolling.WithReference(webapp);
 
 // Configure docker compose generation
 builder.AddDockerComposeEnvironment(DockerComposeConfig.ComposeEnvironmentName)
@@ -53,19 +45,6 @@ migrator.PublishAsDockerComposeService((res, ser) =>
     ser.Networks = [DockerComposeConfig.Networks.PkdNetKey]; 
     ser.Environment["TZ"] = "Europe/Warsaw";
 });
-dataPolling.PublishAsDockerComposeService((res, ser) =>
-{
-    ser.Build = new()
-    {
-        Context = "..",
-        Dockerfile = "docker/Dockerfile",
-        Target = "pkd-datapollingservice"
-    };
-    ser.Networks = [DockerComposeConfig.Networks.PkdNetKey];
-    ser.Restart = "unless-stopped";
-    ser.Environment[EnvironmentParamsKeys.BizGovApiKey] = bizGovApiKeyParam.AsEnvironmentPlaceholder(res);
-    ser.Environment["TZ"] = "Europe/Warsaw";
-});
 webapp.PublishAsDockerComposeService((res, ser) =>
 {
     ser.Build = new()
@@ -76,6 +55,7 @@ webapp.PublishAsDockerComposeService((res, ser) =>
     };
     ser.Networks = [DockerComposeConfig.Networks.PkdNetKey, DockerComposeConfig.Networks.ProxyNetKey];
     ser.Restart = "unless-stopped";
+    ser.Environment[EnvironmentParamsKeys.BizGovApiKey] = bizGovApiKeyParam.AsEnvironmentPlaceholder(res);
     ser.Environment["TZ"] = "Europe/Warsaw";
 });
 

@@ -2,5 +2,5 @@
 
 internal static class HttpClientKeys
 {
-    public const string HangfireClientKey = "BiznesGov";
+    public const string BiznesGovKey = "BiznesGov";
 }

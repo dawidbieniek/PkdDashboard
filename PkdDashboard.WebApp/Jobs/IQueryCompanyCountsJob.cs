@@ -1,4 +1,4 @@
-﻿namespace PkdDashboard.DataPollingService.Jobs;
+﻿namespace PkdDashboard.WebApp.Jobs;
 
 internal interface IQueryCompanyCountsJob
 {

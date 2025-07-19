@@ -3,25 +3,23 @@ using Hangfire.PostgreSql;
 
 using Microsoft.EntityFrameworkCore;
 
-using PkdDashboard.DataPollingService;
-using PkdDashboard.DataPollingService.Data;
-using PkdDashboard.DataPollingService.Jobs;
-using PkdDashboard.DataPollingService.Jobs.QueryCompanyCounts;
 using PkdDashboard.Global;
+using PkdDashboard.WebApp;
+using PkdDashboard.WebApp.Jobs;
+using PkdDashboard.WebApp.Jobs.QueryCompanyCounts;
+using PkdDashboard.WebApp.ServiceCollectionExtensions.Config;
+using PkdDashboard.WebApp.Services;
 
 using System.Net.Http.Headers;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
-internal static class ServiceCollectionExtensions
+internal static class Hangfire
 {
-    internal static void AddPollingServiceDataServices(this IHostApplicationBuilder builder)
-    {
-        builder.AddDatabase<PkdDbContext>();
-    }
-
     public static void ConfigureHangfire(this IHostApplicationBuilder builder)
     {
+        builder.AddHttpClient();
+
         string connectionString = builder.GetDbConnectionString();
 
         builder.Services.AddHangfire(options =>
@@ -33,10 +31,29 @@ internal static class ServiceCollectionExtensions
             );
         });
 
+        builder.Services.AddHangfireServer(options =>
+        {
+            options.WorkerCount = 1;
+        });
+        builder.Services.AddSingleton<HangfireAuthorizationFilter>();
+
         builder.Services.AddJobs();
+
+        builder.Services.AddScoped<HangfireService>();
     }
 
-    public static void AddHttpClients(this IHostApplicationBuilder builder)
+    public static void UseWebappHangfireDashboard(this WebApplication app)
+    {
+        app.UseHangfireDashboard("/hangfire", new DashboardOptions
+        {
+            Authorization = [app.Services.GetRequiredService<HangfireAuthorizationFilter>()],
+            DashboardTitle = "PKD Dashboard Jobs",
+            IsReadOnlyFunc = (context) => false,
+            IgnoreAntiforgeryToken = true,
+        });
+    }
+
+    private static void AddHttpClient(this IHostApplicationBuilder builder)
     {
         string token = builder.Configuration[EnvironmentParamsKeys.BizGovApiKey]
             ?? throw new NullReferenceException("No JWT for authorization - check your configuration");
@@ -55,21 +72,6 @@ internal static class ServiceCollectionExtensions
         services.AddScoped<DatabaseService>();
 
         return services;
-    }
-
-    private static void AddDatabase<T>(this IHostApplicationBuilder builder) where T : DbContext
-    {
-        string connectionString = builder.GetDbConnectionString();
-
-        builder.Services.AddDbContext<T>((sp, options) =>
-        {
-            options.UseNpgsql(connectionString);
-        });
-
-        builder.EnrichNpgsqlDbContext<T>(options =>
-        {
-            options.CommandTimeout = 15;
-        });
     }
 
     private static string GetDbConnectionString(this IHostApplicationBuilder builder)

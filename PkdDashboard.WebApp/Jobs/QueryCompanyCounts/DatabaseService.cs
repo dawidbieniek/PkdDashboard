@@ -1,11 +1,11 @@
-﻿using PkdDashboard.DataPollingService.Data;
-using PkdDashboard.DataPollingService.Data.Entities;
+﻿using PkdDashboard.WebApp.Data;
+using PkdDashboard.WebApp.Data.Entities;
 
-namespace PkdDashboard.DataPollingService.Jobs.QueryCompanyCounts;
+namespace PkdDashboard.WebApp.Jobs.QueryCompanyCounts;
 
-internal class DatabaseService(PkdDbContext dbContext)
+internal class DatabaseService(AppDbContext dbContext)
 {
-    private readonly PkdDbContext _dbContext = dbContext;
+    private readonly AppDbContext _dbContext = dbContext;
 
     public bool IsTodayEntryPresent(DateOnly today)
         => _dbContext.CompanyCounts

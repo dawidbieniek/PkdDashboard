@@ -6,5 +6,4 @@ public static class ServiceKeys
     public const string PostgreSql = "pkd-postgresql";
     public const string Migrator = "pkd-migrator";
     public const string Database = "mainDatabase";
-    public const string DataPollingService = "pkd-datapollingservice";
 }

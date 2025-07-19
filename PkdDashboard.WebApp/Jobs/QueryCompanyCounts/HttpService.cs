@@ -1,6 +1,6 @@
 ﻿using System.Text.Json;
 
-namespace PkdDashboard.DataPollingService.Jobs.QueryCompanyCounts;
+namespace PkdDashboard.WebApp.Jobs.QueryCompanyCounts;
 
 internal class HttpService(ILogger<HttpService> logger, IHttpClientFactory httpClientFactory)
 {

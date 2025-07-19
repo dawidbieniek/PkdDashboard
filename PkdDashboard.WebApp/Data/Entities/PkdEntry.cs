@@ -20,7 +20,8 @@ internal class PkdEntry : Entity
     public string GroupString => $"{DivisionString}.{Group}";
     public string ClassString => $"{GroupString}{Class}";
 
-    public string ToQueryString => $"{Division:D2}{Group}{Class}{PkdSuffix}";
+    public string ToQueryString()
+        => $"{Division:D2}{Group}{Class}{PkdSuffix}";
 
     public override bool Equals(object? obj)
     {

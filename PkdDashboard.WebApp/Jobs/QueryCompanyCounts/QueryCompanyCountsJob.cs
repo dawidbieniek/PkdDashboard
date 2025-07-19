@@ -1,6 +1,6 @@
 ﻿using PkdDashboard.Shared.DateUtil;
 
-namespace PkdDashboard.DataPollingService.Jobs.QueryCompanyCounts;
+namespace PkdDashboard.WebApp.Jobs.QueryCompanyCounts;
 
 internal class QueryCompanyCountsJob(ILogger<QueryCompanyCountsJob> logger, DatabaseService databaseService, HttpService httpService) : IQueryCompanyCountsJob
 {
@@ -27,7 +27,7 @@ internal class QueryCompanyCountsJob(ILogger<QueryCompanyCountsJob> logger, Data
             pkdsForQuery = [.. pkdsForQuery.Take(1000)];
         }
 
-        _logger.LogInformation("Querying company counts for {count} PKDs in {batchCount} batches of size {batchSize}", pkdsForQuery.Count, (pkdsForQuery.Count / BatchSize) + 1, BatchSize);
+        _logger.LogInformation("Querying company counts for {count} PKDs in {batchCount} batches of size {batchSize}", pkdsForQuery.Count, pkdsForQuery.Count / BatchSize + 1, BatchSize);
 
         for (int i = 0; i < pkdsForQuery.Count; i += BatchSize)
         {

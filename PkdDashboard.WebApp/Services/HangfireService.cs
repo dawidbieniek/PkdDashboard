@@ -1,41 +1,42 @@
-﻿namespace PkdDashboard.WebApp.Services;
+﻿using Hangfire;
+using Hangfire.Common;
+using Hangfire.Storage;
 
-internal class HangfireService(ILogger<HangfireService> logger, IHttpClientFactory httpClientFactory)
+using PkdDashboard.WebApp.Jobs;
+
+namespace PkdDashboard.WebApp.Services;
+
+internal class HangfireService(IBackgroundJobClient bgw, IRecurringJobManager jobManager)
 {
-    private readonly ILogger<HangfireService> _logger = logger;
-    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
+    private readonly IBackgroundJobClient _bgw = bgw;
+    private readonly IRecurringJobManager _jobManager = jobManager;
 
-    public async Task<bool> IsJobScheduledAsync()
+    public static bool IsJobScheduled()
     {
-        var http = _httpClientFactory.CreateClient(HttpClientKeys.HangfireClientKey);
-        var response = await http.GetAsync("/job/status");
+        var monitor = JobStorage.Current.GetConnection();
+        var recurringJobs = monitor.GetRecurringJobs();
 
-
-        return bool.Parse(await response.Content.ReadAsStringAsync());
+        return recurringJobs.Any(x => x.Id == IQueryCompanyCountsJob.JobId);
     }
 
-    public async Task ScheduleJobAsync()
+    public void EnableJobPeriodicRun()
     {
-        var http = _httpClientFactory.CreateClient(HttpClientKeys.HangfireClientKey);
-        var response = await http.GetAsync("/job/start");
-
-        ;
+        _jobManager.AddOrUpdate(IQueryCompanyCountsJob.JobId,
+            Job.FromExpression<IQueryCompanyCountsJob>(j => j.ExecuteAsync(CancellationToken.None)),
+            Cron.Daily(8),  // Run the job at 10 ECT
+            new RecurringJobOptions()
+            {
+                TimeZone = TimeZoneInfo.Local
+            });
     }
 
-    public async Task UnScheduleJobAsync()
+    public void DisableJobPeriodicRun()
     {
-        var http = _httpClientFactory.CreateClient(HttpClientKeys.HangfireClientKey);
-        var response = await http.GetAsync("/job/stop");
-
-        ;
+        _jobManager.RemoveIfExists(IQueryCompanyCountsJob.JobId);
     }
 
-
-    public async Task TriggerJobAsync()
+    public void RunJob()
     {
-        var http = _httpClientFactory.CreateClient(HttpClientKeys.HangfireClientKey);
-        var response = await http.GetAsync("/job/force");
-
-        ;
+        _bgw.Enqueue<IQueryCompanyCountsJob>(job => job.ExecuteAsync(CancellationToken.None));
     }
 }

@@ -41,26 +41,26 @@
 
     private bool _allowForce = false;
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
-        await UpdateJobStatus();
+        UpdateJobStatus();
     }
 
-    private async Task ForceJob()
+    private void ForceJob()
     {
-        await HangfireService.TriggerJobAsync();
+        HangfireService.RunJob();
         _allowForce = false;
     }
 
     private async Task StartJob()
     {
-        await HangfireService.ScheduleJobAsync();
+        HangfireService.EnableJobPeriodicRun();
         await UpdateStatusAfterDelay();
     }
 
     private async Task StopJob()
     {
-        await HangfireService.UnScheduleJobAsync();
+        HangfireService.DisableJobPeriodicRun();
         await UpdateStatusAfterDelay();
     }
 
@@ -69,14 +69,12 @@
         _loadingStatus = true;
         StateHasChanged();
         await Task.Delay(2000);
-        await UpdateJobStatus();
+        UpdateJobStatus();
     }
 
-    private async Task UpdateJobStatus()
+    private void UpdateJobStatus()
     {
-        _loadingStatus = true;
-        StateHasChanged();
-        _status = await HangfireService.IsJobScheduledAsync();
+        _status = HangfireService.IsJobScheduled();
         _loadingStatus = false;
     }
 }

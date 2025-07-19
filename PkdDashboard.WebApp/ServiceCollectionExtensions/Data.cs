@@ -2,7 +2,6 @@
 
 using PkdDashboard.Global;
 using PkdDashboard.Shared.Migrations;
-using PkdDashboard.WebApp;
 using PkdDashboard.WebApp.Data;
 using PkdDashboard.WebApp.Data.Abstract;
 using PkdDashboard.WebApp.Data.Seeding;
@@ -10,22 +9,19 @@ using PkdDashboard.WebApp.Services;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
-public static class ServiceCollectionsExtensions
+public static class Data
 {
     private const string MigrationsSchema = "schMigrations";
 
-    internal static IServiceCollection AddWebAppServices(this IServiceCollection services)
+    internal static IServiceCollection AddWebappDataServices(this IServiceCollection services)
     {
         services.AddScoped<PkdService>();
         services.AddScoped<CompanyCountService>();
-        services.AddScoped<HangfireService>();
-
-        services.AddAppHttpClients();
 
         return services;
     }
 
-    internal static void AddWebAppDataServices(this IHostApplicationBuilder builder)
+    internal static void AddWebappDatacontexts(this IHostApplicationBuilder builder)
     {
         string connectionString = builder.Configuration.GetConnectionString(ServiceKeys.Database)
             ?? throw new NullReferenceException($"No connection string provided for '{ServiceKeys.Database}'");
@@ -74,15 +70,5 @@ public static class ServiceCollectionsExtensions
         {
             options.CommandTimeout = 15;
         });
-    }
-
-    private static IServiceCollection AddAppHttpClients(this IServiceCollection services)
-    {
-        services.AddHttpClient(HttpClientKeys.HangfireClientKey, options =>
-        {
-            options.BaseAddress = new Uri($"http://{ServiceKeys.DataPollingService}"); ;
-        });
-
-        return services;
     }
 }

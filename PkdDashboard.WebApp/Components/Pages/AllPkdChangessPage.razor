@@ -1,5 +1,6 @@
 ﻿@page "/"
 @using PkdDashboard.Shared.DateUtil
+@using PkdDashboard.WebApp.Data.Dto
 @using PkdDashboard.WebApp.Data.Entities.Auth
 
 @rendermode InteractiveServer
@@ -42,10 +43,10 @@
                     </MudTextField>
                 </ToolBarContent>
                 <HeaderContent>
-                    <MudTh>PKD</MudTh>
-                    <MudTh>Poprzednio</MudTh>
-                    <MudTh>Obecnie</MudTh>
-                    <MudTh>Różnica</MudTh>
+                    <MudTh><MudTableSortLabel SortLabel="@nameof(CompanyCountDiff.PkdString)" T="CompanyCountDiff">PKD</MudTableSortLabel></MudTh>
+                    <MudTh><MudTableSortLabel SortLabel="@nameof(CompanyCountDiff.PreviousCount)" T="CompanyCountDiff">Poprzednio</MudTableSortLabel></MudTh>
+                    <MudTh><MudTableSortLabel SortLabel="@nameof(CompanyCountDiff.CurrentCount)" T="CompanyCountDiff">Obecnie</MudTableSortLabel></MudTh>
+                    <MudTh><MudTableSortLabel SortLabel="@nameof(CompanyCountDiff.Difference)" T="CompanyCountDiff">Różnica</MudTableSortLabel></MudTh>
                 </HeaderContent>
                 <RowTemplate>
                     <MudTd DataLabel="Pkd"><PkdTextLink Text="@context.PkdString" /></MudTd>
@@ -78,6 +79,7 @@
 
             field = value;
             _table.ReloadServerData();
+            StateHasChanged();
         }
     }
     private DateTime? PreviousDay
@@ -90,6 +92,7 @@
 
             field = value;
             _table.ReloadServerData();
+            StateHasChanged();
         }
     }
 
@@ -98,11 +101,18 @@
     protected override async Task OnInitializedAsync()
     {
         _availableDates = await CompanyCountService.GetAllDatesWithEntryAsync();
+    }
 
-        if (_availableDates.Count > 0)
-            CurrentDay = MathExtensions.Min(DateUtil.TodayDateTime, _availableDates.Last());
-        if (_availableDates.Count > 1)
-            PreviousDay = MathExtensions.Min(DateUtil.TodayDateTime.AddDays(-1), _availableDates[^2]);
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+
+            if (_availableDates.Count > 0)
+                CurrentDay = MathExtensions.Min(DateUtil.TodayDateTime, _availableDates.Last());
+            if (_availableDates.Count > 1)
+                PreviousDay = MathExtensions.Min(DateUtil.TodayDateTime.AddDays(-1), _availableDates[^2]);
+        }
     }
 
     private async Task<TableData<CompanyCountDiff>> ServerReload(TableState state, CancellationToken token)
@@ -123,12 +133,13 @@
         allPkds.Union(previousCounts.Keys.ToHashSet());
 
         var allCounts = allPkds
-            .SkipTake(new(state))
-            .Select(pkd => new CompanyCountDiff(
-                pkd.PkdString,
+            .Select(pkd => new CompanyCountDiff(pkd.PkdString,
                 todayCounts.TryGetValue(pkd, out var todayCount) ? todayCount.Count : 0,
                 previousCounts.TryGetValue(pkd, out var previousCount) ? previousCount.Count : 0
-            )).ToList();
+            ))
+            .OrderByTableState(state)
+            .SkipTake(new(state))
+            .ToList();
 
         return new TableData<CompanyCountDiff>()
         {
@@ -150,8 +161,4 @@
                 ? Color.Inherit
                 : Color.Error;
 
-    private record CompanyCountDiff(string PkdString, int CurrentCount, int PreviousCount)
-    {
-        public int Difference => CurrentCount - PreviousCount;
-    }
 }

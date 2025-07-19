@@ -1,19 +1,37 @@
 ﻿@page "/admin"
 @using PkdDashboard.Global
 @using PkdDashboard.WebApp.Jobs
+@using PkdDashboard.WebApp.Jobs.QueryCompanyCounts
 
 @rendermode InteractiveServer
 
-@inject HangfireService HangfireService
+@inject CompanyCountService CompanyCountService
 
-<MudStack>
-    <JobControlRow Name="@nameof(IQueryCompanyCountsJob)"
-                   UpdateStatus="HangfireService.IsJobScheduled"
-                   OnStart="HangfireService.EnableJobPeriodicRun"
-                   OnStop="HangfireService.DisableJobPeriodicRun"
-                   OnForce="HangfireService.RunJob" />
-
-    <MudPaper Elevation="2">
+<MudPaper Elevation="2">
+    <MudStack>
+        <MudPaper Elevation="1">
+            <JobControlRow T="QueryCompanyCountsJob" JobExecute="j => j.ExecuteAsync(CancellationToken.None)" JobScheduleUtcHour="8" />
+        </MudPaper>
+        <MudPaper Elevation="1">
+            <JobControlRow T="FixCompanyCountsForDayJob"
+                           JobExecute="j => j.ExecuteAsync(DateOnly.FromDateTime(FixCompanyCountSelectedDate!.Value), CancellationToken.None)"
+                           AllowScheduling="false"
+                           AdditionalForceFieldsValidationResult="FixCompanyCountSelectedDate is not null">
+                <AdditionalForceFields>
+                    <MudDatePicker @bind-Date="FixCompanyCountSelectedDate" IsDateDisabledFunc="x => !_fixCompanyCountAllowedDates.Contains(x)" Class="medium-input" Label="Date" />
+                </AdditionalForceFields>
+            </JobControlRow>
+        </MudPaper>
         <iframe src="/hangfire" style="height:600px" />
-    </MudPaper>
-</MudStack>
+    </MudStack>
+</MudPaper>
+
+@code {
+    private DateTime? FixCompanyCountSelectedDate { get; set; }
+    private List<DateTime> _fixCompanyCountAllowedDates = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        _fixCompanyCountAllowedDates = await CompanyCountService.GetAllMissingDates();
+    }
+}

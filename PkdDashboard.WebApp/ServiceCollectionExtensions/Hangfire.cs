@@ -67,7 +67,7 @@ internal static class Hangfire
 
     private static IServiceCollection AddJobs(this IServiceCollection services)
     {
-        services.AddScoped<IQueryCompanyCountsJob, QueryCompanyCountsJob>();
+        services.AddScoped<QueryCompanyCountsJob>();
         services.AddScoped<HttpService>();
         services.AddScoped<DatabaseService>();
 

@@ -1,8 +1,9 @@
 ﻿using PkdDashboard.Shared.DateUtil;
+using PkdDashboard.WebApp.Jobs.QueryCompanyCounts;
 
-namespace PkdDashboard.WebApp.Jobs.QueryCompanyCounts;
+namespace PkdDashboard.WebApp.Jobs;
 
-internal class QueryCompanyCountsJob(ILogger<QueryCompanyCountsJob> logger, DatabaseService databaseService, HttpService httpService) : IQueryCompanyCountsJob
+internal class QueryCompanyCountsJob(ILogger<QueryCompanyCountsJob> logger, DatabaseService databaseService, HttpService httpService) : IJob
 {
     private const int BatchSize = 20;
     private const int BatchDelayMs = 4000;
@@ -10,6 +11,8 @@ internal class QueryCompanyCountsJob(ILogger<QueryCompanyCountsJob> logger, Data
     private readonly ILogger<QueryCompanyCountsJob> _logger = logger;
     private readonly DatabaseService _databaseService = databaseService;
     private readonly HttpService _httpService = httpService;
+
+    public static string JobId => nameof(QueryCompanyCountsJob);
 
     public async Task ExecuteAsync(CancellationToken cancellationToken)
     {

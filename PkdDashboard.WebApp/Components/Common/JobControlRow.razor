@@ -1,20 +1,32 @@
-﻿<MudStack>
-    <MudText Typo="Typo.h6">@Name</MudText>
+﻿@using PkdDashboard.WebApp.Jobs
+@using PkdDashboard.WebApp.Services
+@using System.Linq.Expressions
+
+@typeparam T where T : IJob
+
+@inject HangfireService HangfireService
+
+<MudStack>
+    <MudText Typo="Typo.h6">@(IJobUtil.GetJobId<T>())</MudText>
     <MudStack Row>
-        @if (OnStart.HasDelegate)
+        @if (AllowScheduling)
         {
             <MudButton Color="Color.Warning" OnClick="StartJob" Disabled="_isLoading || _status">Start</MudButton>
-        }
-        @if (OnStop.HasDelegate)
-        {
             <MudButton Color="Color.Warning" OnClick="StopJob" Disabled="_isLoading || !_status">Stop</MudButton>
+            <StatusChip Status="_status" IsLoading="_isLoading" />
         }
-        <StatusChip Status="_status" IsLoading="_isLoading" />
-        @if (OnForce.HasDelegate)
+        @if(AllowScheduling && AllowForce)
         {
             <MudSpacer />
-            <MudCheckBox @bind-Value="_allowForce" Label="Allow forcing" />
-            <MudButton Color="Color.Error" OnClick="ForceJob" Disabled="!_allowForce">Force</MudButton>
+        }
+        @if (AllowForce)
+        {
+            <MudCheckBox @bind-Value="_allowForce" Label="Allow forcing"/>
+            @if (AdditionalForceFields is not null)
+            {
+                @AdditionalForceFields
+            }
+            <MudButton Color="Color.Error" OnClick="ForceJob" Disabled="!_allowForce || !AdditionalForceFieldsValidationResult">Force</MudButton>
         }
     </MudStack>
 </MudStack>
@@ -25,15 +37,19 @@
     private bool _allowForce = false;
 
     [Parameter, EditorRequired]
-    public string Name { get; set; } = string.Empty;
-    [Parameter, EditorRequired]
-    public Func<bool> UpdateStatus { get; set; }
+    public Expression<Func<T, Task>> JobExecute { get; set; } = default!;
     [Parameter]
-    public EventCallback OnStart { get; set; }
+    public bool AllowScheduling { get; set; } = true;
     [Parameter]
-    public EventCallback OnStop { get; set; }
+    public bool AllowForce { get; set; } = true;
     [Parameter]
-    public EventCallback OnForce { get; set; }
+    public int? JobScheduleUtcHour { get; set; }
+    [Parameter]
+    public int StatusUpdateDelayMs { get; set; } = 2000;
+    [Parameter]
+    public RenderFragment? AdditionalForceFields { get; set; }
+    [Parameter]
+    public bool AdditionalForceFieldsValidationResult { get; set; }
 
 
     protected override void OnInitialized()
@@ -41,21 +57,27 @@
         UpdateJobStatus();
     }
 
-    private async Task ForceJob()
+    private void ForceJob()
     {
-        await OnForce.InvokeAsync();
+        HangfireService.RunJob<T>(JobExecute);
         _allowForce = false;
     }
 
     private async Task StartJob()
     {
-        await OnStart.InvokeAsync();
+        if (!AllowScheduling) return;
+        if(!JobScheduleUtcHour.HasValue)
+            throw new InvalidOperationException("JobScheduleUtcHour must be set when AllowScheduling is true.");
+
+        HangfireService.EnableJobPeriodicRun<T>(JobExecute, JobScheduleUtcHour.Value);
         await UpdateStatusAfterDelay();
     }
 
     private async Task StopJob()
     {
-        await OnStop.InvokeAsync();
+        if (!AllowScheduling) return;
+
+        HangfireService.DisableJobPeriodicRun<T>();
         await UpdateStatusAfterDelay();
     }
 
@@ -63,13 +85,13 @@
     {
         _isLoading = true;
         StateHasChanged();
-        await Task.Delay(2000);
+        await Task.Delay(StatusUpdateDelayMs);
         UpdateJobStatus();
     }
 
     private void UpdateJobStatus()
     {
-        _status = UpdateStatus.Invoke();
+        _status = HangfireService.IsJobScheduled<T>();
         _isLoading = false;
     }
 }

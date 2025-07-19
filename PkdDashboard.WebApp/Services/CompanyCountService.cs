@@ -14,6 +14,7 @@ internal class CompanyCountService(IDbContextFactory<AppDbContext> contextFactor
     {
         using var dbContext = _contextFactory.CreateDbContext();
         var distinctDays = await dbContext.CompanyCounts
+            .AsNoTracking()
             .Select(cc => cc.Day)
             .Distinct()
             .OrderBy(cc => cc.Day)
@@ -21,6 +22,28 @@ internal class CompanyCountService(IDbContextFactory<AppDbContext> contextFactor
 
         // Converting to DateTime in memory, because SQL won't do this
         return [.. distinctDays.Select(day => day.ToDateTime(TimeOnly.MinValue))];
+    }
+
+    public async Task<List<DateTime>> GetAllMissingDates()
+    {
+        using var dbContext = _contextFactory.CreateDbContext();
+        var daysWithCount = (await dbContext.CompanyCounts
+            .AsNoTracking()
+            .Select(cc => cc.Day)
+            .Distinct()
+            .OrderBy(cc => cc.Day)
+            .ToListAsync())
+            .Select(day => day.ToDateTime(TimeOnly.MinValue))
+            .ToList();
+
+        var lastDay = daysWithCount.Last();
+        var firstDay = daysWithCount.First();
+
+        var allDays = Enumerable.Range(0, (lastDay - firstDay).Days + 1)
+            .Select(offset => firstDay.AddDays(offset))
+            .ToList();
+
+        return [.. allDays.Except(daysWithCount)];
     }
 
     public async Task<PagedResult<CompanyCount>> GetListQueryAsync(DateOnly day, PagerSearchQuery pagerSearchQuery)

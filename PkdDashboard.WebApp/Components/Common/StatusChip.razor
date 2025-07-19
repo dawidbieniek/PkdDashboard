@@ -1,0 +1,22 @@
+﻿@if (IsLoading)
+{
+    <MudChip T="string" Color="Color.Info">Loading...</MudChip>
+}
+else
+{
+    if (Status)
+    {
+        <MudChip T="string" Color="Color.Success">Enabled</MudChip>
+    }
+    else
+    {
+        <MudChip T="string" Color="Color.Error">Disabled</MudChip>
+    }
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public bool Status { get; set; }
+    [Parameter]
+    public bool IsLoading { get; set; } = false;
+}

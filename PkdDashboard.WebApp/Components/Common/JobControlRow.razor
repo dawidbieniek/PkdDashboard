@@ -1,0 +1,75 @@
+﻿<MudStack>
+    <MudText Typo="Typo.h6">@Name</MudText>
+    <MudStack Row>
+        @if (OnStart.HasDelegate)
+        {
+            <MudButton Color="Color.Warning" OnClick="StartJob" Disabled="_isLoading || _status">Start</MudButton>
+        }
+        @if (OnStop.HasDelegate)
+        {
+            <MudButton Color="Color.Warning" OnClick="StopJob" Disabled="_isLoading || !_status">Stop</MudButton>
+        }
+        <StatusChip Status="_status" IsLoading="_isLoading" />
+        @if (OnForce.HasDelegate)
+        {
+            <MudSpacer />
+            <MudCheckBox @bind-Value="_allowForce" Label="Allow forcing" />
+            <MudButton Color="Color.Error" OnClick="ForceJob" Disabled="!_allowForce">Force</MudButton>
+        }
+    </MudStack>
+</MudStack>
+
+@code {
+    private bool _isLoading = true;
+    private bool _status;
+    private bool _allowForce = false;
+
+    [Parameter, EditorRequired]
+    public string Name { get; set; } = string.Empty;
+    [Parameter, EditorRequired]
+    public Func<bool> UpdateStatus { get; set; }
+    [Parameter]
+    public EventCallback OnStart { get; set; }
+    [Parameter]
+    public EventCallback OnStop { get; set; }
+    [Parameter]
+    public EventCallback OnForce { get; set; }
+
+
+    protected override void OnInitialized()
+    {
+        UpdateJobStatus();
+    }
+
+    private async Task ForceJob()
+    {
+        await OnForce.InvokeAsync();
+        _allowForce = false;
+    }
+
+    private async Task StartJob()
+    {
+        await OnStart.InvokeAsync();
+        await UpdateStatusAfterDelay();
+    }
+
+    private async Task StopJob()
+    {
+        await OnStop.InvokeAsync();
+        await UpdateStatusAfterDelay();
+    }
+
+    private async Task UpdateStatusAfterDelay()
+    {
+        _isLoading = true;
+        StateHasChanged();
+        await Task.Delay(2000);
+        UpdateJobStatus();
+    }
+
+    private void UpdateJobStatus()
+    {
+        _status = UpdateStatus.Invoke();
+        _isLoading = false;
+    }
+}

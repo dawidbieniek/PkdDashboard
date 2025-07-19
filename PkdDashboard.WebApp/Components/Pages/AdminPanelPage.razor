@@ -1,80 +1,19 @@
 ﻿@page "/admin"
 @using PkdDashboard.Global
+@using PkdDashboard.WebApp.Jobs
 
 @rendermode InteractiveServer
 
 @inject HangfireService HangfireService
 
 <MudStack>
-    <MudStack Row>
-        <MudButton Color="Color.Primary" OnClick="UpdateJobStatus">Check status</MudButton>
-        @if (_loadingStatus)
-        {
-            <MudChip T="string" Color="Color.Info">Loading...</MudChip>
-        }
-        else
-        {
-            if (_status)
-            {
-                <MudChip T="string" Color="Color.Success">Enabled</MudChip>
-            }
-            else
-            {
-                <MudChip T="string" Color="Color.Error">Disabled</MudChip>
-            }
-        }
-    </MudStack>
-    <MudStack Row>
-        <MudButton Color="Color.Warning" OnClick="StartJob" Disabled="_loadingStatus || _status">Start</MudButton>
-        <MudButton Color="Color.Warning" OnClick="StopJob" Disabled="_loadingStatus || !_status">Stop</MudButton>
-        <MudSpacer />
-        <MudCheckBox @bind-Value="_allowForce" Label="Allow forcing" />
-        <MudButton Color="Color.Error" OnClick="ForceJob" Disabled="!_allowForce">Force</MudButton>
-    </MudStack>
+    <JobControlRow Name="@nameof(IQueryCompanyCountsJob)"
+                   UpdateStatus="HangfireService.IsJobScheduled"
+                   OnStart="HangfireService.EnableJobPeriodicRun"
+                   OnStop="HangfireService.DisableJobPeriodicRun"
+                   OnForce="HangfireService.RunJob" />
+
+    <MudPaper Elevation="2">
+        <iframe src="/hangfire" style="height:600px" />
+    </MudPaper>
 </MudStack>
-
-<iframe src="/hangfire" style="height:600px" />
-
-@code {
-    private bool _loadingStatus = true;
-    private bool _status;
-
-    private bool _allowForce = false;
-
-    protected override void OnInitialized()
-    {
-        UpdateJobStatus();
-    }
-
-    private void ForceJob()
-    {
-        HangfireService.RunJob();
-        _allowForce = false;
-    }
-
-    private async Task StartJob()
-    {
-        HangfireService.EnableJobPeriodicRun();
-        await UpdateStatusAfterDelay();
-    }
-
-    private async Task StopJob()
-    {
-        HangfireService.DisableJobPeriodicRun();
-        await UpdateStatusAfterDelay();
-    }
-
-    private async Task UpdateStatusAfterDelay()
-    {
-        _loadingStatus = true;
-        StateHasChanged();
-        await Task.Delay(2000);
-        UpdateJobStatus();
-    }
-
-    private void UpdateJobStatus()
-    {
-        _status = HangfireService.IsJobScheduled();
-        _loadingStatus = false;
-    }
-}

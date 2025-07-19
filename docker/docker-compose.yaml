@@ -7,8 +7,6 @@ services:
       POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256 --auth-local=scram-sha-256"
       POSTGRES_USER: "postgres"
       POSTGRES_PASSWORD: "${PKD_POSTGRESQL_PASSWORD}"
-    ports:
-      - "8000:5432"
     volumes:
       - type: "volume"
         target: "/var/lib/postgresql/data"
@@ -48,11 +46,9 @@ services:
       ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
       HTTP_PORTS: "8001"
       ConnectionStrings__mainDatabase: "Host=pkd-postgresql;Port=5432;Username=postgres;Password=${PKD_POSTGRESQL_PASSWORD};Database=mainDatabase"
+      ASPNETCORE_URLS: "http://+:8005"
       BiznesGovKey: "${BIZNESGOVKEY}"
       TZ: "Europe/Warsaw"
-    ports:
-      - "8002:8001"
-      - "8004:8003"
     depends_on:
       pkd-postgresql:
         condition: "service_started"

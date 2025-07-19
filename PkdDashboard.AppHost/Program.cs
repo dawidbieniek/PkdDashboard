@@ -13,7 +13,8 @@ var migrator = builder.AddProject<Projects.PkdDashboard_Migrator>(ServiceKeys.Mi
 
 var webapp = builder.AddProject<Projects.PkdDashboard_WebApp>(ServiceKeys.WebApp)
     .WithReference(database).WaitFor(database)
-    .WaitForCompletion(migrator);
+    .WaitForCompletion(migrator)
+    .WithEnvironment("ASPNETCORE_URLS", "http://+:8005");
 
 // Configure docker compose generation
 builder.AddDockerComposeEnvironment(DockerComposeConfig.ComposeEnvironmentName)
@@ -31,6 +32,7 @@ var bizGovApiKeyParam = builder.AddParameter(EnvironmentParamsKeys.BizGovApiKey,
 
 postgre.PublishAsDockerComposeService((res, ser) =>
 {
+    ser.Ports = [];
     ser.Networks = [DockerComposeConfig.Networks.PkdNetKey, DockerComposeConfig.Networks.ProxyNetKey];
     ser.Restart = "unless-stopped";
 });
@@ -42,6 +44,7 @@ migrator.PublishAsDockerComposeService((res, ser) =>
         Dockerfile = "docker/Dockerfile",
         Target = "pkd-migrator"
     };
+    ser.Ports = [];
     ser.Networks = [DockerComposeConfig.Networks.PkdNetKey]; 
     ser.Environment["TZ"] = "Europe/Warsaw";
 });
@@ -53,6 +56,7 @@ webapp.PublishAsDockerComposeService((res, ser) =>
         Dockerfile = "docker/Dockerfile",
         Target = "pkd-dashboard"
     };
+    ser.Ports = [];
     ser.Networks = [DockerComposeConfig.Networks.PkdNetKey, DockerComposeConfig.Networks.ProxyNetKey];
     ser.Restart = "unless-stopped";
     ser.Environment[EnvironmentParamsKeys.BizGovApiKey] = bizGovApiKeyParam.AsEnvironmentPlaceholder(res);

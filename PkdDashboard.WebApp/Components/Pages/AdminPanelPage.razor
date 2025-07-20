@@ -1,9 +1,12 @@
 ﻿@page "/admin"
 @using PkdDashboard.Global
+@using PkdDashboard.WebApp.Data.Entities.Auth
 @using PkdDashboard.WebApp.Jobs
 @using PkdDashboard.WebApp.Jobs.QueryCompanyCounts
 
 @rendermode InteractiveServer
+
+@attribute [Authorize(Roles = UserRoles.Admin)]
 
 @inject CompanyCountService CompanyCountService
 

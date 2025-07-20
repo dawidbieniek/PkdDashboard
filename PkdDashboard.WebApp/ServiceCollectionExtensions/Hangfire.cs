@@ -29,6 +29,8 @@ internal static class Hangfire
             options.UsePostgreSqlStorage(options =>
                 options.UseNpgsqlConnection(connectionString)
             );
+
+            options.UseFilter(new AutomaticRetryAttribute { Attempts = 0 });
         });
 
         builder.Services.AddHangfireServer(options =>

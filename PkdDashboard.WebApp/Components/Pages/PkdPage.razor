@@ -72,13 +72,12 @@
         base.OnInitialized();
     }
 
-    // TODO: Try to make async
-    private async Task<IEnumerable<PkdEntry>> SearchPkdAsync(string searchQuery, CancellationToken cancellationToken)
+    private Task<IEnumerable<PkdEntry>> SearchPkdAsync(string searchQuery, CancellationToken cancellationToken)
     {
         if (string.IsNullOrEmpty(searchQuery))
-            return _allPkds;
+            return Task.FromResult((IEnumerable<PkdEntry>)_allPkds);
 
-        return _allPkds.Where(pkd => pkd.PkdString.Contains(searchQuery, StringComparison.InvariantCultureIgnoreCase));
+        return Task.FromResult(_allPkds.Where(pkd => pkd.PkdString.Contains(searchQuery, StringComparison.InvariantCultureIgnoreCase)));
     }
 
     private async Task On_selectedPkdChanged(PkdEntry? value)

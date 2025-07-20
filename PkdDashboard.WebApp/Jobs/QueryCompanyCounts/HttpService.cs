@@ -1,4 +1,6 @@
-﻿using System.Text.Json;
+﻿using PkdDashboard.WebApp.Jobs.QueryCompanyCounts.Exceptions;
+
+using System.Text.Json;
 
 namespace PkdDashboard.WebApp.Jobs.QueryCompanyCounts;
 
@@ -10,13 +12,13 @@ internal class HttpService(ILogger<HttpService> logger, IHttpClientFactory httpC
 
     private const string RateLimitHeaderName = "X-Rate-Limit-Remaining";
 
-    private const int MinJitterDelayMs = 200;
-    private const int MaxJitterDelayMs = 800;
+    private const int MinJitterDelayMs = 100;
+    private const int MaxJitterDelayMs = 500;
 
     private readonly ILogger<HttpService> _logger = logger;
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
 
-    private async Task<(int? Count, int? RemainingRateRequests)> GetNumberOfCompaniesInPkdAsync(string pkdQuery, CancellationToken cancellationToken)
+    private async Task<(int Count, int? RemainingRateRequests)> GetNumberOfCompaniesInPkdAsync(string pkdQuery, CancellationToken cancellationToken)
     {
         var http = _httpClientFactory.CreateClient(HttpClientKeys.BiznesGovKey);
         var response = await http.GetAsync($"firmy?pkd={pkdQuery}&{StatusQuery}&{LimitQuery}", cancellationToken);
@@ -32,12 +34,12 @@ internal class HttpService(ILogger<HttpService> logger, IHttpClientFactory httpC
         if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
         {
             _logger.LogError("Too many requests to the API.");
-            return (null, remainingRateRequests);
+            throw new HttpApiErrorException("Reached API rate limit");
         }
         if (!response.IsSuccessStatusCode)
         {
             _logger.LogError("Recieved error status code: {code}", response.StatusCode);
-            return (null, remainingRateRequests);
+            throw new HttpApiErrorException("Recieved error status code");
         }
         if (response.StatusCode == System.Net.HttpStatusCode.NoContent)
             return (0, remainingRateRequests);
@@ -52,23 +54,34 @@ internal class HttpService(ILogger<HttpService> logger, IHttpClientFactory httpC
         }
 
         _logger.LogError("Count property is missing or not a number.");
-        return (null, remainingRateRequests);
+        throw new HttpApiErrorException("Couldn't parse json");
     }
 
-    public async Task<IEnumerable<int?>> RequestBatchOfNumberOfCompaniesInPkdAsync(List<string> pkdQueries, CancellationToken cancellationToken)
+    public async Task<IEnumerable<int>> RequestBatchOfNumberOfCompaniesInPkdAsync(List<string> pkdQueries, CancellationToken cancellationToken)
     {
-        List<int?> results = new(pkdQueries.Count);
+        List<int> results = new(pkdQueries.Count);
         int? lastRateLimit = null;
+        string? lastPkd = null;
 
         foreach (var pkdQuery in pkdQueries)
         {
-            (int? count, int? rateLimit) = await GetNumberOfCompaniesInPkdAsync(pkdQuery, cancellationToken);
-            results.Add(count);
+            try
+            {
+                (int count, int? rateLimit) = await GetNumberOfCompaniesInPkdAsync(pkdQuery, cancellationToken);
+                results.Add(count);
 
-            if (rateLimit.HasValue)
-                lastRateLimit = rateLimit;
+                if (rateLimit.HasValue)
+                    lastRateLimit = rateLimit;
 
-            await JitterDelay(cancellationToken);
+                lastPkd = pkdQuery;
+
+                await JitterDelay(cancellationToken);
+            }
+            catch (HttpApiErrorException ex)
+            {
+                _logger.LogError(ex, "Failed to retrieve company count for PKD: {pkdQuery}", pkdQuery);
+                throw new HttpApiErrorException(lastPkd, ex.Message, ex);
+            }
         }
 
         if (lastRateLimit.HasValue)

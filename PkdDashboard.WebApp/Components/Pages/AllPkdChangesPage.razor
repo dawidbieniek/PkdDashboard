@@ -30,6 +30,14 @@
                     </MudText>
                 </MudAlert>
             }
+            @if(_missingTodayCounts)
+            {
+                <MudAlert Severity="Severity.Warning" Class="mt-2">
+                    <MudText Typo="Typo.body1">
+                        Wpisy na dzisiejszy dzień: <strong>@CurrentDay?.ToString("yyyy-MM-dd")</strong> nie zostały jeszcze pobrane.
+                    </MudText>
+                </MudAlert>
+            }
             <MudTable T="CompanyCountDiff" @ref="_table" Class="full-height-table" ServerData="ServerReload" Hover Dense>
                 <ToolBarContent>
                     <MudText Typo="Typo.h6">Zmiany liczby firm</MudText>
@@ -68,6 +76,7 @@
     private MudTable<CompanyCountDiff> _table = default!;
     private string _searchQuery = string.Empty;
     private bool _mismatchedCountsCount = false;
+    private bool _missingTodayCounts = false;
 
     private DateTime? CurrentDay
     {
@@ -109,7 +118,10 @@
         {
 
             if (_availableDates.Count > 0)
+            {
                 CurrentDay = MathExtensions.Min(DateUtil.TodayDateTime, _availableDates.Last());
+                _missingTodayCounts = CurrentDay != DateUtil.TodayDateTime;
+            }
             if (_availableDates.Count > 1)
                 PreviousDay = MathExtensions.Min(DateUtil.TodayDateTime.AddDays(-1), _availableDates[^2]);
         }

@@ -18,7 +18,7 @@
             {
                 <MudText Typo="Typo.h6">@_selectedPkd.Description</MudText>
                 <MudDateRangePicker Class="large-input" DateRange="_dateRange" DateRangeChanged="OnDateRangeChanged" MinDate="_minAllowedDate" MaxDate="_maxAllowdDate" Label="Zakres dat" DateFormat="dddd, dd MMMM, yyyy" />
-                <MudChart ChartType="ChartType.Line" ChartSeries="_chartSeries" XAxisLabels="_chartLabels" ChartOptions="_chartOptions" AxisChartOptions="_chartAxisOptions" />
+                <MudChart Class="w-100" ChartType="ChartType.Line" ChartSeries="_chartSeries" XAxisLabels="_chartLabels" ChartOptions="_chartOptions" AxisChartOptions="_chartAxisOptions" />
             }
         </MudStack>
     </MudPaper>
@@ -103,8 +103,31 @@
             ? []
             : await CompanyCountService.GetCountsForPkdInDateRangeAsync(pkdEntry, DateOnly.FromDateTime(dateRange.Start.Value), DateOnly.FromDateTime(dateRange.End.Value));
 
-        _chartSeries[0].Data = data.Select(cc => (double)cc.Count).ToArray();
-        _chartLabels = data.Select(cc => cc.Day.ToString("dd.MM")).ToArray();
+        const int aggregationThreshold = 28;
+        if (data.Count > aggregationThreshold)
+        {
+            var weeklyData = data
+                .GroupBy(cc =>
+                {
+                    var day = cc.Day;
+                    int diff = (7 + (int)day.DayOfWeek - (int)DayOfWeek.Monday) % 7;
+                    return day.AddDays(-diff);
+                })
+                .OrderBy(g => g.Key)
+                .Select(g => new {
+                    WeekStart = g.Key,
+                    TotalCount = g.Sum(cc => cc.Count)
+                })
+                .ToList();
+
+            _chartSeries[0].Data = weeklyData.Select(w => (double)w.TotalCount).ToArray();
+            _chartLabels = weeklyData.Select(w => w.WeekStart.ToString("dd.MM")).ToArray();
+        }
+        else
+        {
+            _chartSeries[0].Data = data.Select(cc => (double)cc.Count).ToArray();
+            _chartLabels = data.Select(cc => cc.Day.ToString("dd.MM")).ToArray();
+        }
 
         _chartOptions.InterpolationOption = data.Count < 4
             ? LowDataInterpolationOption

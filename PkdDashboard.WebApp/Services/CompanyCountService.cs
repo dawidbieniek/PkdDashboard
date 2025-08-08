@@ -17,7 +17,7 @@ internal class CompanyCountService(IDbContextFactory<AppDbContext> contextFactor
             .AsNoTracking()
             .Select(cc => cc.Day)
             .Distinct()
-            .OrderBy(cc => cc.Day)
+            .OrderBy(cc => cc)
             .ToListAsync();
 
         // Converting to DateTime in memory, because SQL won't do this

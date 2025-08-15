@@ -19,7 +19,8 @@
             <JobControlRow T="FixCompanyCountsForDayJob"
                            JobExecute="j => j.ExecuteAsync(DateOnly.FromDateTime(FixCompanyCountSelectedDate!.Value), CancellationToken.None)"
                            AllowScheduling="false"
-                           AdditionalForceFieldsValidationResult="FixCompanyCountSelectedDate is not null">
+                           AdditionalForceFieldsValidationResult="FixCompanyCountSelectedDate is not null"
+                           ShowWarning="_fixCompanyCountAllowedDates.Count > 0">
                 <AdditionalForceFields>
                     <MudDatePicker @bind-Date="FixCompanyCountSelectedDate" IsDateDisabledFunc="x => !_fixCompanyCountAllowedDates.Contains(x)" Class="medium-input" Label="Date" />
                 </AdditionalForceFields>
@@ -35,6 +36,6 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _fixCompanyCountAllowedDates = await CompanyCountService.GetAllMissingDates();
+        _fixCompanyCountAllowedDates = await CompanyCountService.GetAllDatesWithMissingCounts();
     }
 }

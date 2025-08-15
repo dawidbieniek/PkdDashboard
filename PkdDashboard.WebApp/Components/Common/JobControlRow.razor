@@ -7,7 +7,13 @@
 @inject HangfireService HangfireService
 
 <MudStack>
-    <MudText Typo="Typo.h6">@(IJobUtil.GetJobId<T>())</MudText>
+    <MudStack Row>
+        <MudText Typo="Typo.h6">@(IJobUtil.GetJobId<T>())</MudText>
+        @if (ShowWarning)
+        {
+            <MudChip T="string" Color="Color.Error">!</MudChip>
+        }
+    </MudStack>
     <MudStack Row>
         @if (AllowScheduling)
         {
@@ -15,13 +21,13 @@
             <MudButton Color="Color.Warning" OnClick="StopJob" Disabled="_isLoading || !_status">Stop</MudButton>
             <StatusChip Status="_status" IsLoading="_isLoading" />
         }
-        @if(AllowScheduling && AllowForce)
+        @if (AllowScheduling && AllowForce)
         {
             <MudSpacer />
         }
         @if (AllowForce)
         {
-            <MudCheckBox @bind-Value="_allowForce" Label="Allow forcing"/>
+            <MudCheckBox @bind-Value="_allowForce" Label="Allow forcing" />
             @if (AdditionalForceFields is not null)
             {
                 @AdditionalForceFields
@@ -50,6 +56,8 @@
     public RenderFragment? AdditionalForceFields { get; set; }
     [Parameter]
     public bool AdditionalForceFieldsValidationResult { get; set; } = true;
+    [Parameter]
+    public bool ShowWarning { get; set; } = false;
 
 
     protected override void OnInitialized()
@@ -66,7 +74,7 @@
     private async Task StartJob()
     {
         if (!AllowScheduling) return;
-        if(!JobScheduleUtcHour.HasValue)
+        if (!JobScheduleUtcHour.HasValue)
             throw new InvalidOperationException("JobScheduleUtcHour must be set when AllowScheduling is true.");
 
         HangfireService.EnableJobPeriodicRun<T>(JobExecute, JobScheduleUtcHour.Value);

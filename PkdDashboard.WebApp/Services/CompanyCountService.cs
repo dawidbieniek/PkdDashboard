@@ -24,26 +24,33 @@ internal class CompanyCountService(IDbContextFactory<AppDbContext> contextFactor
         return [.. distinctDays.Select(day => day.ToDateTime(TimeOnly.MinValue))];
     }
 
-    public async Task<List<DateTime>> GetAllMissingDates()
+    public async Task<List<DateTime>> GetAllDatesWithMissingCounts()
     {
         using var dbContext = _contextFactory.CreateDbContext();
-        var daysWithCount = (await dbContext.CompanyCounts
+
+        var pkdExpectedCount = await dbContext.PkdEntries
             .AsNoTracking()
-            .Select(cc => cc.Day)
+            .CountAsync();
+
+        var daysWithFullCount = (await dbContext.CompanyCounts
+            .AsNoTracking()
+            .GroupBy(cc => cc.Day)
+            .Where(g => g.Count() == pkdExpectedCount)
+            .Select(g => g.Key)
             .Distinct()
             .OrderBy(cc => cc.Day)
             .ToListAsync())
             .Select(day => day.ToDateTime(TimeOnly.MinValue))
             .ToList();
 
-        var lastDay = daysWithCount.Last();
-        var firstDay = daysWithCount.First();
+        var lastDay = daysWithFullCount.Last();
+        var firstDay = daysWithFullCount.First();
 
         var allDays = Enumerable.Range(0, (lastDay - firstDay).Days + 1)
             .Select(offset => firstDay.AddDays(offset))
             .ToList();
 
-        return [.. allDays.Except(daysWithCount)];
+        return [.. allDays.Except(daysWithFullCount)];
     }
 
     public async Task<PagedResult<CompanyCount>> GetListQueryAsync(DateOnly day, PagerSearchQuery pagerSearchQuery)
